@@ -185,6 +185,11 @@ void TrackingController_getStatus(TrackingController_Status *status)
     }
 }
 
+uint32_t TrackingController_getMilliseconds(void)
+{
+    return gMilliseconds;
+}
+
 void SysTick_Handler(void)
 {
     gMilliseconds++;

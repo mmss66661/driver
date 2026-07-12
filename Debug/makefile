@@ -13,7 +13,6 @@ ORDERED_OBJS += \
 "./empty.o" \
 "./ti_msp_dl_config.o" \
 "./startup_mspm0g350x_ticlang.o" \
-"./fault_diagnostics.o" \
 "./stepper_motor.o" \
 "./tracking_controller.o" \
 $(GEN_CMDS__FLAG) \
@@ -139,8 +138,8 @@ driver.out: $(OBJS) $(GEN_CMDS)
 # Other Targets
 clean:
 	-$(RM) $(GEN_MISC_FILES__QUOTED)$(GEN_FILES__QUOTED)$(EXE_OUTPUTS__QUOTED)
-	-$(RM) "empty.o" "ti_msp_dl_config.o" "startup_mspm0g350x_ticlang.o" "fault_diagnostics.o" "stepper_motor.o" "tracking_controller.o" 
-	-$(RM) "empty.d" "ti_msp_dl_config.d" "startup_mspm0g350x_ticlang.d" "fault_diagnostics.d" "stepper_motor.d" "tracking_controller.d" 
+	-$(RM) "empty.o" "ti_msp_dl_config.o" "startup_mspm0g350x_ticlang.o" "stepper_motor.o" "tracking_controller.o" 
+	-$(RM) "empty.d" "ti_msp_dl_config.d" "startup_mspm0g350x_ticlang.d" "stepper_motor.d" "tracking_controller.d" 
 	-@echo ' '
 
 .PHONY: all clean dependents

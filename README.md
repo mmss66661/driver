@@ -200,6 +200,32 @@ int main(void)
 UART2 中断逐字节解析数据帧，SysTick 提供 1 ms 通信超时计时。帧头、帧尾或 UART
 错误不会直接驱动电机，只有完整且帧尾正确的 8 字节数据才会更新控制目标。
 
+### UART2 发送测试
+
+`empty.c` 中默认打开 `UART_TX_TEST_ENABLE`。主循环每 500 ms 从 PA23
+（UART2_TX）发送一次：
+
+```text
+UART2 TX OK\r\n
+```
+
+测试时将 USB-TTL 的 RX 接 PA23、GND 接开发板 GND，串口工具设置为
+230400、8N1，并使用文本接收模式。能稳定看到该字符串，说明 MSPM0 的 UART2 TX、
+波特率和基本接线正常。测试完成后将下面的宏改为 `0U`，避免调试字符串发送给摄像头：
+
+```c
+#define UART_TX_TEST_ENABLE (0U)
+```
+
+如果 UART2 收到并成功解析了一帧正确的 `FC CF ... CF FC` 数据，还会返回：
+
+```text
+UART2 RX FRAME OK\r\n
+```
+
+因此：只看到 `UART2 TX OK` 表示下位机发送正常，但尚未收到合法帧；同时看到
+`UART2 RX FRAME OK` 才表示 PA24 接收、串口参数和帧格式也都正确。
+
 ## 步进电机 API
 
 ### 电机选择
@@ -239,22 +265,3 @@ UART2 中断逐字节解析数据帧，SysTick 提供 1 ms 通信超时计时。
 ```text
 1600 / 3200 = 0.5 圈/秒 = 30 RPM
 ```
-
-## 异常诊断
-
-工程提供 `fault_diagnostics.c`，用于区分 HardFault、NMI 和意外外设中断。如果程序
-因异常停止，CCS 会优先停在 `__BKPT(0)`；在 **Expressions** 窗口添加
-`gFaultInfo` 和 `gStartupStage`：
-
-| 字段 | 含义 |
-| --- | --- |
-| `gFaultInfo.magic` | 等于 `0x4641554C` 表示已经记录到有效故障 |
-| `exceptionNumber` | ARM 当前异常号；2=NMI，3=HardFault，外设中断从 16 开始 |
-| `source` | 软件识别到的故障来源，通常与异常号相同 |
-| `startupStage` | 1=刚进入 main，2=SysConfig 完成，3=电机初始化完成，4=UART/SysTick 完成，5=正常主循环 |
-| `stackedPC` | HardFault 发生时正在执行的指令地址 |
-| `stackedLR` | HardFault 发生时的返回地址 |
-| `icsr` | SCB 中断控制状态寄存器原值 |
-
-将这些数值和 `Debug/driver.map` 一起查看，即可把 `stackedPC` 定位到具体函数。正常
-运行时 `gFaultInfo.magic` 为 0。

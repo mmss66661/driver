@@ -12,7 +12,6 @@ C_SRCS += \
 ../empty.c \
 ./ti_msp_dl_config.c \
 C:/TI/mspm0_sdk_2_10_00_04/source/ti/devices/msp/m0p/startup_system_files/ticlang/startup_mspm0g350x_ticlang.c \
-../fault_diagnostics.c \
 ../stepper_motor.c \
 ../tracking_controller.c 
 
@@ -28,7 +27,6 @@ C_DEPS += \
 ./empty.d \
 ./ti_msp_dl_config.d \
 ./startup_mspm0g350x_ticlang.d \
-./fault_diagnostics.d \
 ./stepper_motor.d \
 ./tracking_controller.d 
 
@@ -39,7 +37,6 @@ OBJS += \
 ./empty.o \
 ./ti_msp_dl_config.o \
 ./startup_mspm0g350x_ticlang.o \
-./fault_diagnostics.o \
 ./stepper_motor.o \
 ./tracking_controller.o 
 
@@ -52,7 +49,6 @@ OBJS__QUOTED += \
 "empty.o" \
 "ti_msp_dl_config.o" \
 "startup_mspm0g350x_ticlang.o" \
-"fault_diagnostics.o" \
 "stepper_motor.o" \
 "tracking_controller.o" 
 
@@ -65,7 +61,6 @@ C_DEPS__QUOTED += \
 "empty.d" \
 "ti_msp_dl_config.d" \
 "startup_mspm0g350x_ticlang.d" \
-"fault_diagnostics.d" \
 "stepper_motor.d" \
 "tracking_controller.d" 
 
@@ -78,7 +73,6 @@ C_SRCS__QUOTED += \
 "../empty.c" \
 "./ti_msp_dl_config.c" \
 "C:/TI/mspm0_sdk_2_10_00_04/source/ti/devices/msp/m0p/startup_system_files/ticlang/startup_mspm0g350x_ticlang.c" \
-"../fault_diagnostics.c" \
 "../stepper_motor.c" \
 "../tracking_controller.c" 
 
