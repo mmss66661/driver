@@ -112,18 +112,18 @@ bool SYSCFG_DL_SYSCTL_SYSPLL_init(void);
 
 
 /* Defines for TRACKING_UART */
-#define TRACKING_UART_INST                                                 UART2
+#define TRACKING_UART_INST                                                 UART0
 #define TRACKING_UART_INST_FREQUENCY                                    40000000
-#define TRACKING_UART_INST_IRQHandler                           UART2_IRQHandler
-#define TRACKING_UART_INST_INT_IRQN                               UART2_INT_IRQn
+#define TRACKING_UART_INST_IRQHandler                           UART0_IRQHandler
+#define TRACKING_UART_INST_INT_IRQN                               UART0_INT_IRQn
 #define GPIO_TRACKING_UART_RX_PORT                                         GPIOA
 #define GPIO_TRACKING_UART_TX_PORT                                         GPIOA
-#define GPIO_TRACKING_UART_RX_PIN                                 DL_GPIO_PIN_24
-#define GPIO_TRACKING_UART_TX_PIN                                 DL_GPIO_PIN_23
-#define GPIO_TRACKING_UART_IOMUX_RX                              (IOMUX_PINCM54)
-#define GPIO_TRACKING_UART_IOMUX_TX                              (IOMUX_PINCM53)
-#define GPIO_TRACKING_UART_IOMUX_RX_FUNC               IOMUX_PINCM54_PF_UART2_RX
-#define GPIO_TRACKING_UART_IOMUX_TX_FUNC               IOMUX_PINCM53_PF_UART2_TX
+#define GPIO_TRACKING_UART_RX_PIN                                 DL_GPIO_PIN_31
+#define GPIO_TRACKING_UART_TX_PIN                                 DL_GPIO_PIN_28
+#define GPIO_TRACKING_UART_IOMUX_RX                               (IOMUX_PINCM6)
+#define GPIO_TRACKING_UART_IOMUX_TX                               (IOMUX_PINCM3)
+#define GPIO_TRACKING_UART_IOMUX_RX_FUNC                IOMUX_PINCM6_PF_UART0_RX
+#define GPIO_TRACKING_UART_IOMUX_TX_FUNC                IOMUX_PINCM3_PF_UART0_TX
 #define TRACKING_UART_BAUD_RATE                                         (230400)
 #define TRACKING_UART_IBRD_40_MHZ_230400_BAUD                               (10)
 #define TRACKING_UART_FBRD_40_MHZ_230400_BAUD                               (54)
@@ -149,6 +149,8 @@ bool SYSCFG_DL_SYSCTL_SYSPLL_init(void);
 #define MOTOR_DIR_MOTOR2_ENABLE_IOMUX                            (IOMUX_PINCM37)
 
 
+
+
 /* clang-format on */
 
 void SYSCFG_DL_init(void);
@@ -162,6 +164,7 @@ void SYSCFG_DL_PITCH_PWM_init(void);
 void SYSCFG_DL_YAW_PWM_init(void);
 void SYSCFG_DL_TRACKING_UART_init(void);
 
+void SYSCFG_DL_SYSTICK_init(void);
 
 bool SYSCFG_DL_saveConfiguration(void);
 bool SYSCFG_DL_restoreConfiguration(void);

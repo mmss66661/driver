@@ -55,6 +55,7 @@ SYSCONFIG_WEAK void SYSCFG_DL_init(void)
     SYSCFG_DL_PITCH_PWM_init();
     SYSCFG_DL_YAW_PWM_init();
     SYSCFG_DL_TRACKING_UART_init();
+    SYSCFG_DL_SYSTICK_init();
     SYSCFG_DL_SYSCTL_CLK_init();
     /* Ensure backup structures have no valid state */
 	gYAW_PWMBackup.backupRdy 	= false;
@@ -92,11 +93,13 @@ SYSCONFIG_WEAK void SYSCFG_DL_initPower(void)
     DL_TimerG_reset(YAW_PWM_INST);
     DL_UART_Main_reset(TRACKING_UART_INST);
 
+
     DL_GPIO_enablePower(GPIOA);
     DL_GPIO_enablePower(GPIOB);
     DL_TimerG_enablePower(PITCH_PWM_INST);
     DL_TimerG_enablePower(YAW_PWM_INST);
     DL_UART_Main_enablePower(TRACKING_UART_INST);
+
     delay_cycles(POWER_STARTUP_DELAY);
 }
 
@@ -378,13 +381,17 @@ SYSCONFIG_WEAK void SYSCFG_DL_TRACKING_UART_init(void)
 
     /* Configure Interrupts */
     DL_UART_Main_enableInterrupt(TRACKING_UART_INST,
-                                 DL_UART_MAIN_INTERRUPT_FRAMING_ERROR |
-                                 DL_UART_MAIN_INTERRUPT_NOISE_ERROR |
-                                 DL_UART_MAIN_INTERRUPT_OVERRUN_ERROR |
-                                 DL_UART_MAIN_INTERRUPT_PARITY_ERROR |
                                  DL_UART_MAIN_INTERRUPT_RX);
 
 
     DL_UART_Main_enable(TRACKING_UART_INST);
+}
+
+SYSCONFIG_WEAK void SYSCFG_DL_SYSTICK_init(void)
+{
+    /* Initialize the period to 1.00 ms */
+    DL_SYSTICK_init(80000);
+    /* Enable the SysTick and start counting */
+    DL_SYSTICK_enable();
 }
 

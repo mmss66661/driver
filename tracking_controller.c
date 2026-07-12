@@ -136,7 +136,8 @@ void TrackingController_init(void)
     gErrX             = 0;
     gErrY             = 0;
 
-    (void) DL_SYSTICK_config(CPUCLK_FREQ / 1000U);
+    /* SysConfig starts SysTick; its interrupt must be enabled separately. */
+    DL_SYSTICK_enableInterrupt();
     NVIC_ClearPendingIRQ(TRACKING_UART_INST_INT_IRQN);
     NVIC_EnableIRQ(TRACKING_UART_INST_INT_IRQN);
 }

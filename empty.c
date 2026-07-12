@@ -25,6 +25,11 @@ int main(void)
     StepperMotor_init();
     TrackingController_init();
 
+#if UART_TX_TEST_ENABLE
+    /* Immediate message: UART TX testing no longer depends on SysTick. */
+    UART_testSendString("UART0 TX START\r\n");
+#endif
+
     while (1) {
         TrackingController_process();
 
@@ -34,7 +39,7 @@ int main(void)
 
         if ((now - lastTestTime) >= UART_TX_TEST_PERIOD_MS) {
             lastTestTime = now;
-            UART_testSendString("UART2 TX OK\r\n");
+            UART_testSendString("UART0 TX OK\r\n");
         }
 
         TrackingController_getStatus(&status);
@@ -42,7 +47,7 @@ int main(void)
             ((now - lastRxAckTime) >= 100U)) {
             lastRxAckTime = now;
             lastAckedFrameCount = status.validFrameCount;
-            UART_testSendString("UART2 RX FRAME OK\r\n");
+            UART_testSendString("UART0 RX FRAME OK\r\n");
         }
 #endif
 
