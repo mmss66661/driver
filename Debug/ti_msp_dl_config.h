@@ -111,6 +111,22 @@ bool SYSCFG_DL_SYSCTL_SYSPLL_init(void);
 
 
 
+
+/* Defines for OLED */
+#define OLED_INST                                                           I2C1
+#define OLED_INST_IRQHandler                                     I2C1_IRQHandler
+#define OLED_INST_INT_IRQN                                         I2C1_INT_IRQn
+#define OLED_BUS_SPEED_HZ                                                 400000
+#define GPIO_OLED_SDA_PORT                                                 GPIOB
+#define GPIO_OLED_SDA_PIN                                          DL_GPIO_PIN_3
+#define GPIO_OLED_IOMUX_SDA                                      (IOMUX_PINCM16)
+#define GPIO_OLED_IOMUX_SDA_FUNC                       IOMUX_PINCM16_PF_I2C1_SDA
+#define GPIO_OLED_SCL_PORT                                                 GPIOB
+#define GPIO_OLED_SCL_PIN                                          DL_GPIO_PIN_2
+#define GPIO_OLED_IOMUX_SCL                                      (IOMUX_PINCM15)
+#define GPIO_OLED_IOMUX_SCL_FUNC                       IOMUX_PINCM15_PF_I2C1_SCL
+
+
 /* Defines for TRACKING_UART */
 #define TRACKING_UART_INST                                                 UART0
 #define TRACKING_UART_INST_FREQUENCY                                    40000000
@@ -127,6 +143,38 @@ bool SYSCFG_DL_SYSCTL_SYSPLL_init(void);
 #define TRACKING_UART_BAUD_RATE                                         (230400)
 #define TRACKING_UART_IBRD_40_MHZ_230400_BAUD                               (10)
 #define TRACKING_UART_FBRD_40_MHZ_230400_BAUD                               (54)
+/* Defines for IMU601 */
+#define IMU601_INST                                                        UART3
+#define IMU601_INST_FREQUENCY                                           80000000
+#define IMU601_INST_IRQHandler                                  UART3_IRQHandler
+#define IMU601_INST_INT_IRQN                                      UART3_INT_IRQn
+#define GPIO_IMU601_RX_PORT                                                GPIOA
+#define GPIO_IMU601_TX_PORT                                                GPIOA
+#define GPIO_IMU601_RX_PIN                                        DL_GPIO_PIN_25
+#define GPIO_IMU601_TX_PIN                                        DL_GPIO_PIN_26
+#define GPIO_IMU601_IOMUX_RX                                     (IOMUX_PINCM55)
+#define GPIO_IMU601_IOMUX_TX                                     (IOMUX_PINCM59)
+#define GPIO_IMU601_IOMUX_RX_FUNC                      IOMUX_PINCM55_PF_UART3_RX
+#define GPIO_IMU601_IOMUX_TX_FUNC                      IOMUX_PINCM59_PF_UART3_TX
+#define IMU601_BAUD_RATE                                                (115200)
+#define IMU601_IBRD_80_MHZ_115200_BAUD                                      (43)
+#define IMU601_FBRD_80_MHZ_115200_BAUD                                      (26)
+/* Defines for CHASSIS_UART */
+#define CHASSIS_UART_INST                                                  UART1
+#define CHASSIS_UART_INST_FREQUENCY                                     40000000
+#define CHASSIS_UART_INST_IRQHandler                            UART1_IRQHandler
+#define CHASSIS_UART_INST_INT_IRQN                                UART1_INT_IRQn
+#define GPIO_CHASSIS_UART_RX_PORT                                          GPIOA
+#define GPIO_CHASSIS_UART_TX_PORT                                          GPIOA
+#define GPIO_CHASSIS_UART_RX_PIN                                   DL_GPIO_PIN_9
+#define GPIO_CHASSIS_UART_TX_PIN                                   DL_GPIO_PIN_8
+#define GPIO_CHASSIS_UART_IOMUX_RX                               (IOMUX_PINCM20)
+#define GPIO_CHASSIS_UART_IOMUX_TX                               (IOMUX_PINCM19)
+#define GPIO_CHASSIS_UART_IOMUX_RX_FUNC                IOMUX_PINCM20_PF_UART1_RX
+#define GPIO_CHASSIS_UART_IOMUX_TX_FUNC                IOMUX_PINCM19_PF_UART1_TX
+#define CHASSIS_UART_BAUD_RATE                                          (115200)
+#define CHASSIS_UART_IBRD_40_MHZ_115200_BAUD                                (21)
+#define CHASSIS_UART_FBRD_40_MHZ_115200_BAUD                                (45)
 
 
 
@@ -147,6 +195,75 @@ bool SYSCFG_DL_SYSCTL_SYSPLL_init(void);
 /* Defines for MOTOR2_ENABLE: GPIOA.15 with pinCMx 37 on package pin 8 */
 #define MOTOR_DIR_MOTOR2_ENABLE_PIN                             (DL_GPIO_PIN_15)
 #define MOTOR_DIR_MOTOR2_ENABLE_IOMUX                            (IOMUX_PINCM37)
+/* Port definition for Pin Group LINE_SENSOR */
+#define LINE_SENSOR_PORT                                                 (GPIOB)
+
+/* Defines for LINE0: GPIOB.0 with pinCMx 12 on package pin 47 */
+#define LINE_SENSOR_LINE0_PIN                                    (DL_GPIO_PIN_0)
+#define LINE_SENSOR_LINE0_IOMUX                                  (IOMUX_PINCM12)
+/* Defines for LINE1: GPIOB.1 with pinCMx 13 on package pin 48 */
+#define LINE_SENSOR_LINE1_PIN                                    (DL_GPIO_PIN_1)
+#define LINE_SENSOR_LINE1_IOMUX                                  (IOMUX_PINCM13)
+/* Defines for LINE2: GPIOB.4 with pinCMx 17 on package pin 52 */
+#define LINE_SENSOR_LINE2_PIN                                    (DL_GPIO_PIN_4)
+#define LINE_SENSOR_LINE2_IOMUX                                  (IOMUX_PINCM17)
+/* Defines for LINE3: GPIOB.5 with pinCMx 18 on package pin 53 */
+#define LINE_SENSOR_LINE3_PIN                                    (DL_GPIO_PIN_5)
+#define LINE_SENSOR_LINE3_IOMUX                                  (IOMUX_PINCM18)
+/* Defines for LINE4: GPIOB.7 with pinCMx 24 on package pin 59 */
+#define LINE_SENSOR_LINE4_PIN                                    (DL_GPIO_PIN_7)
+#define LINE_SENSOR_LINE4_IOMUX                                  (IOMUX_PINCM24)
+/* Defines for LINE5: GPIOB.8 with pinCMx 25 on package pin 60 */
+#define LINE_SENSOR_LINE5_PIN                                    (DL_GPIO_PIN_8)
+#define LINE_SENSOR_LINE5_IOMUX                                  (IOMUX_PINCM25)
+/* Defines for LINE6: GPIOB.9 with pinCMx 26 on package pin 61 */
+#define LINE_SENSOR_LINE6_PIN                                    (DL_GPIO_PIN_9)
+#define LINE_SENSOR_LINE6_IOMUX                                  (IOMUX_PINCM26)
+/* Defines for LINE7: GPIOB.10 with pinCMx 27 on package pin 62 */
+#define LINE_SENSOR_LINE7_PIN                                   (DL_GPIO_PIN_10)
+#define LINE_SENSOR_LINE7_IOMUX                                  (IOMUX_PINCM27)
+/* Defines for LINE8: GPIOB.11 with pinCMx 28 on package pin 63 */
+#define LINE_SENSOR_LINE8_PIN                                   (DL_GPIO_PIN_11)
+#define LINE_SENSOR_LINE8_IOMUX                                  (IOMUX_PINCM28)
+/* Defines for LINE9: GPIOB.12 with pinCMx 29 on package pin 64 */
+#define LINE_SENSOR_LINE9_PIN                                   (DL_GPIO_PIN_12)
+#define LINE_SENSOR_LINE9_IOMUX                                  (IOMUX_PINCM29)
+/* Defines for LINE10: GPIOB.13 with pinCMx 30 on package pin 1 */
+#define LINE_SENSOR_LINE10_PIN                                  (DL_GPIO_PIN_13)
+#define LINE_SENSOR_LINE10_IOMUX                                 (IOMUX_PINCM30)
+/* Defines for LINE11: GPIOB.14 with pinCMx 31 on package pin 2 */
+#define LINE_SENSOR_LINE11_PIN                                  (DL_GPIO_PIN_14)
+#define LINE_SENSOR_LINE11_IOMUX                                 (IOMUX_PINCM31)
+/* Port definition for Pin Group BUTTONS */
+#define BUTTONS_PORT                                                     (GPIOA)
+
+/* Defines for MODE: GPIOA.3 with pinCMx 8 on package pin 43 */
+#define BUTTONS_MODE_PIN                                         (DL_GPIO_PIN_3)
+#define BUTTONS_MODE_IOMUX                                        (IOMUX_PINCM8)
+/* Defines for UP: GPIOA.4 with pinCMx 9 on package pin 44 */
+#define BUTTONS_UP_PIN                                           (DL_GPIO_PIN_4)
+#define BUTTONS_UP_IOMUX                                          (IOMUX_PINCM9)
+/* Defines for DOWN: GPIOA.5 with pinCMx 10 on package pin 45 */
+#define BUTTONS_DOWN_PIN                                         (DL_GPIO_PIN_5)
+#define BUTTONS_DOWN_IOMUX                                       (IOMUX_PINCM10)
+/* Port definition for Pin Group EXTRA_BUTTONS */
+#define EXTRA_BUTTONS_PORT                                               (GPIOA)
+
+/* Defines for KEY1: GPIOA.6 with pinCMx 11 on package pin 46 */
+#define EXTRA_BUTTONS_KEY1_PIN                                   (DL_GPIO_PIN_6)
+#define EXTRA_BUTTONS_KEY1_IOMUX                                 (IOMUX_PINCM11)
+/* Defines for KEY2: GPIOA.7 with pinCMx 14 on package pin 49 */
+#define EXTRA_BUTTONS_KEY2_PIN                                   (DL_GPIO_PIN_7)
+#define EXTRA_BUTTONS_KEY2_IOMUX                                 (IOMUX_PINCM14)
+/* Defines for KEY3: GPIOA.10 with pinCMx 21 on package pin 56 */
+#define EXTRA_BUTTONS_KEY3_PIN                                  (DL_GPIO_PIN_10)
+#define EXTRA_BUTTONS_KEY3_IOMUX                                 (IOMUX_PINCM21)
+/* Defines for KEY4: GPIOA.11 with pinCMx 22 on package pin 57 */
+#define EXTRA_BUTTONS_KEY4_PIN                                  (DL_GPIO_PIN_11)
+#define EXTRA_BUTTONS_KEY4_IOMUX                                 (IOMUX_PINCM22)
+/* Defines for KEY5: GPIOA.13 with pinCMx 35 on package pin 6 */
+#define EXTRA_BUTTONS_KEY5_PIN                                  (DL_GPIO_PIN_13)
+#define EXTRA_BUTTONS_KEY5_IOMUX                                 (IOMUX_PINCM35)
 
 
 
@@ -162,7 +279,10 @@ void SYSCFG_DL_SYSCTL_CLK_init(void);
 bool SYSCFG_DL_SYSCTL_SYSPLL_init(void);
 void SYSCFG_DL_PITCH_PWM_init(void);
 void SYSCFG_DL_YAW_PWM_init(void);
+void SYSCFG_DL_OLED_init(void);
 void SYSCFG_DL_TRACKING_UART_init(void);
+void SYSCFG_DL_IMU601_init(void);
+void SYSCFG_DL_CHASSIS_UART_init(void);
 
 void SYSCFG_DL_SYSTICK_init(void);
 

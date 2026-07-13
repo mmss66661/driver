@@ -1,6 +1,7 @@
 #ifndef TRACKING_CONTROLLER_H_
 #define TRACKING_CONTROLLER_H_
 
+#include <stdbool.h>
 #include <stdint.h>
 
 typedef struct {
@@ -12,6 +13,8 @@ typedef struct {
 
 void TrackingController_init(void);
 void TrackingController_process(void);
+void TrackingController_setEnabled(bool enabled);
+bool TrackingController_isEnabled(void);
 void TrackingController_getStatus(TrackingController_Status *status);
 uint32_t TrackingController_getMilliseconds(void);
 

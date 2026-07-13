@@ -20,6 +20,7 @@
 #define YAW_DIRECTION_INVERTED   (0)
 
 static volatile uint32_t gMilliseconds;
+static bool gTrackingEnabled;
 static volatile bool gFrameReady;
 static volatile int16_t gPendingErrX;
 static volatile int16_t gPendingErrY;
@@ -135,6 +136,7 @@ void TrackingController_init(void)
     gLastFrameTime    = 0U;
     gErrX             = 0;
     gErrY             = 0;
+    gTrackingEnabled  = true;
 
     /* SysConfig starts SysTick; its interrupt must be enabled separately. */
     DL_SYSTICK_enableInterrupt();
@@ -160,7 +162,9 @@ void TrackingController_process(void)
         __enable_irq();
     }
 
-    if (hasFrame) {
+    if (!gTrackingEnabled) {
+        StepperMotor_hold(STEPPER_MOTOR_BOTH);
+    } else if (hasFrame) {
         gErrX = errX;
         gErrY = errY;
         gLastFrameTime = gMilliseconds;
@@ -174,6 +178,19 @@ void TrackingController_process(void)
         /* Lost camera data: stop moving but retain gimbal holding torque. */
         StepperMotor_hold(STEPPER_MOTOR_BOTH);
     }
+}
+
+void TrackingController_setEnabled(bool enabled)
+{
+    gTrackingEnabled = enabled;
+    if (!enabled) {
+        StepperMotor_hold(STEPPER_MOTOR_BOTH);
+    }
+}
+
+bool TrackingController_isEnabled(void)
+{
+    return gTrackingEnabled;
 }
 
 void TrackingController_getStatus(TrackingController_Status *status)

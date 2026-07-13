@@ -11,6 +11,10 @@
  */
 const GPIO   = scripting.addModule("/ti/driverlib/GPIO", {}, false);
 const GPIO1  = GPIO.addInstance();
+const GPIO2  = GPIO.addInstance();
+const GPIO3  = GPIO.addInstance();
+const I2C    = scripting.addModule("/ti/driverlib/I2C", {}, false);
+const I2C1   = I2C.addInstance();
 const PWM    = scripting.addModule("/ti/driverlib/PWM", {}, false);
 const PWM1   = PWM.addInstance();
 const PWM2   = PWM.addInstance();
@@ -18,6 +22,8 @@ const SYSCTL = scripting.addModule("/ti/driverlib/SYSCTL");
 const SYSTICK = scripting.addModule("/ti/driverlib/SYSTICK");
 const UART   = scripting.addModule("/ti/driverlib/UART", {}, false);
 const UART1  = UART.addInstance();
+const UART2  = UART.addInstance();
+const UART3  = UART.addInstance();
 
 /**
  * Write custom configuration values to the imported modules.
@@ -49,7 +55,56 @@ GPIO1.associatedPins[2].assignedPin = "18";
 GPIO1.associatedPins[3].$name       = "MOTOR2_ENABLE";
 GPIO1.associatedPins[3].assignedPin = "15";
 
+GPIO2.$name = "LINE_SENSOR";
+GPIO2.port  = "PORTB";
+GPIO2.associatedPins.create(12);
+const linePins = ["0", "1", "4", "5", "7", "8", "9", "10", "11", "12", "13", "14"];
+for (let i = 0; i < 12; i++) {
+    GPIO2.associatedPins[i].$name       = "LINE" + i;
+    GPIO2.associatedPins[i].direction   = "INPUT";
+    GPIO2.associatedPins[i].assignedPin = linePins[i];
+}
+
+GPIO3.$name = "BUTTONS";
+GPIO3.port  = "PORTA";
+GPIO3.associatedPins.create(3);
+const buttonNames = ["MODE", "UP", "DOWN"];
+const buttonPins  = ["3", "4", "5"];
+for (let i = 0; i < 3; i++) {
+    GPIO3.associatedPins[i].$name            = buttonNames[i];
+    GPIO3.associatedPins[i].direction        = "INPUT";
+    GPIO3.associatedPins[i].internalResistor = "PULL_UP";
+    GPIO3.associatedPins[i].assignedPin      = buttonPins[i];
+}
+
+const GPIO4 = GPIO.addInstance();
+GPIO4.$name = "EXTRA_BUTTONS";
+GPIO4.port  = "PORTA";
+GPIO4.associatedPins.create(5);
+const extraButtonNames = ["KEY1", "KEY2", "KEY3", "KEY4", "KEY5"];
+const extraButtonPins  = ["6", "7", "10", "11", "13"];
+for (let i = 0; i < 5; i++) {
+    GPIO4.associatedPins[i].$name            = extraButtonNames[i];
+    GPIO4.associatedPins[i].direction        = "INPUT";
+    GPIO4.associatedPins[i].internalResistor = "PULL_UP";
+    GPIO4.associatedPins[i].assignedPin      = extraButtonPins[i];
+}
+
 const Board = scripting.addModule("/ti/driverlib/Board", {}, false);
+
+I2C1.$name                             = "OLED";
+I2C1.basicEnableController             = true;
+I2C1.advDigitalGlitchFilter            = "CLOCKS_1";
+I2C1.basicControllerStandardBusSpeed   = "Fast";
+I2C1.peripheral.$assign                = "I2C1";
+I2C1.peripheral.sdaPin.$assign         = "PB3";
+I2C1.peripheral.sclPin.$assign         = "PB2";
+I2C1.sdaPinConfig.$name                = "OLED_SDA";
+I2C1.sdaPinConfig.enableConfig         = true;
+I2C1.sdaPinConfig.internalResistor     = "PULL_UP";
+I2C1.sclPinConfig.$name                = "OLED_SCL";
+I2C1.sclPinConfig.enableConfig         = true;
+I2C1.sclPinConfig.internalResistor     = "PULL_UP";
 
 PWM1.$name                              = "PITCH_PWM";
 PWM1.timerCount                         = 3500;
@@ -111,6 +166,20 @@ UART1.rxPinConfig.hideOutputInversion  = scripting.forceWrite(false);
 UART1.rxPinConfig.onlyInternalResistor = scripting.forceWrite(false);
 UART1.rxPinConfig.passedPeripheralType = scripting.forceWrite("Digital");
 
+UART2.$name                            = "IMU601";
+UART2.targetBaudRate                   = 115200;
+UART2.enabledInterrupts                = ["RX"];
+UART2.peripheral.$assign               = "UART3";
+UART2.peripheral.rxPin.$assign         = "PA25";
+UART2.peripheral.txPin.$assign         = "PA26";
+
+UART3.$name                            = "CHASSIS_UART";
+UART3.targetBaudRate                   = 115200;
+UART3.enabledInterrupts                = ["RX"];
+UART3.peripheral.$assign               = "UART1";
+UART3.peripheral.rxPin.$assign         = "PA9";
+UART3.peripheral.txPin.$assign         = "PA8";
+
 /**
  * Pinmux solution for unlocked pins/peripherals. This ensures that minor changes to the automatic solver in a future
  * version of the tool will not impact the pinmux you originally saw.  These lines can be completely deleted in order to
@@ -120,6 +189,15 @@ GPIO1.associatedPins[0].pin.$suggestSolution = "PA16";
 GPIO1.associatedPins[1].pin.$suggestSolution = "PA17";
 GPIO1.associatedPins[2].pin.$suggestSolution = "PA18";
 GPIO1.associatedPins[3].pin.$suggestSolution = "PA15";
+for (let i = 0; i < 12; i++) {
+    GPIO2.associatedPins[i].pin.$suggestSolution = "PB" + linePins[i];
+}
+for (let i = 0; i < 3; i++) {
+    GPIO3.associatedPins[i].pin.$suggestSolution = "PA" + buttonPins[i];
+}
+for (let i = 0; i < 5; i++) {
+    GPIO4.associatedPins[i].pin.$suggestSolution = "PA" + extraButtonPins[i];
+}
 Board.peripheral.$suggestSolution            = "DEBUGSS";
 Board.peripheral.swclkPin.$suggestSolution   = "PA20";
 Board.peripheral.swdioPin.$suggestSolution   = "PA19";

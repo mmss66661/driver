@@ -41,6 +41,7 @@
 #include "ti_msp_dl_config.h"
 
 DL_TimerG_backupConfig gYAW_PWMBackup;
+DL_UART_Main_backupConfig gIMU601Backup;
 
 /*
  *  ======== SYSCFG_DL_init ========
@@ -54,12 +55,15 @@ SYSCONFIG_WEAK void SYSCFG_DL_init(void)
     SYSCFG_DL_SYSCTL_init();
     SYSCFG_DL_PITCH_PWM_init();
     SYSCFG_DL_YAW_PWM_init();
+    SYSCFG_DL_OLED_init();
     SYSCFG_DL_TRACKING_UART_init();
+    SYSCFG_DL_IMU601_init();
+    SYSCFG_DL_CHASSIS_UART_init();
     SYSCFG_DL_SYSTICK_init();
     SYSCFG_DL_SYSCTL_CLK_init();
     /* Ensure backup structures have no valid state */
 	gYAW_PWMBackup.backupRdy 	= false;
-
+	gIMU601Backup.backupRdy 	= false;
 
 }
 /*
@@ -71,6 +75,7 @@ SYSCONFIG_WEAK bool SYSCFG_DL_saveConfiguration(void)
     bool retStatus = true;
 
 	retStatus &= DL_TimerG_saveConfiguration(YAW_PWM_INST, &gYAW_PWMBackup);
+	retStatus &= DL_UART_Main_saveConfiguration(IMU601_INST, &gIMU601Backup);
 
     return retStatus;
 }
@@ -81,6 +86,7 @@ SYSCONFIG_WEAK bool SYSCFG_DL_restoreConfiguration(void)
     bool retStatus = true;
 
 	retStatus &= DL_TimerG_restoreConfiguration(YAW_PWM_INST, &gYAW_PWMBackup, false);
+	retStatus &= DL_UART_Main_restoreConfiguration(IMU601_INST, &gIMU601Backup);
 
     return retStatus;
 }
@@ -91,14 +97,20 @@ SYSCONFIG_WEAK void SYSCFG_DL_initPower(void)
     DL_GPIO_reset(GPIOB);
     DL_TimerG_reset(PITCH_PWM_INST);
     DL_TimerG_reset(YAW_PWM_INST);
+    DL_I2C_reset(OLED_INST);
     DL_UART_Main_reset(TRACKING_UART_INST);
+    DL_UART_Main_reset(IMU601_INST);
+    DL_UART_Main_reset(CHASSIS_UART_INST);
 
 
     DL_GPIO_enablePower(GPIOA);
     DL_GPIO_enablePower(GPIOB);
     DL_TimerG_enablePower(PITCH_PWM_INST);
     DL_TimerG_enablePower(YAW_PWM_INST);
+    DL_I2C_enablePower(OLED_INST);
     DL_UART_Main_enablePower(TRACKING_UART_INST);
+    DL_UART_Main_enablePower(IMU601_INST);
+    DL_UART_Main_enablePower(CHASSIS_UART_INST);
 
     delay_cycles(POWER_STARTUP_DELAY);
 }
@@ -111,10 +123,29 @@ SYSCONFIG_WEAK void SYSCFG_DL_GPIO_init(void)
     DL_GPIO_initPeripheralOutputFunction(GPIO_YAW_PWM_C0_IOMUX,GPIO_YAW_PWM_C0_IOMUX_FUNC);
     DL_GPIO_enableOutput(GPIO_YAW_PWM_C0_PORT, GPIO_YAW_PWM_C0_PIN);
 
+	DL_GPIO_initPeripheralInputFunctionFeatures(
+		 GPIO_OLED_IOMUX_SDA, GPIO_OLED_IOMUX_SDA_FUNC,
+		 DL_GPIO_INVERSION_DISABLE, DL_GPIO_RESISTOR_PULL_UP,
+		 DL_GPIO_HYSTERESIS_DISABLE, DL_GPIO_WAKEUP_DISABLE);
+	DL_GPIO_initPeripheralInputFunctionFeatures(
+		 GPIO_OLED_IOMUX_SCL, GPIO_OLED_IOMUX_SCL_FUNC,
+		 DL_GPIO_INVERSION_DISABLE, DL_GPIO_RESISTOR_PULL_UP,
+		 DL_GPIO_HYSTERESIS_DISABLE, DL_GPIO_WAKEUP_DISABLE);
+    DL_GPIO_enableHiZ(GPIO_OLED_IOMUX_SDA);
+    DL_GPIO_enableHiZ(GPIO_OLED_IOMUX_SCL);
+
     DL_GPIO_initPeripheralOutputFunction(
         GPIO_TRACKING_UART_IOMUX_TX, GPIO_TRACKING_UART_IOMUX_TX_FUNC);
     DL_GPIO_initPeripheralInputFunction(
         GPIO_TRACKING_UART_IOMUX_RX, GPIO_TRACKING_UART_IOMUX_RX_FUNC);
+    DL_GPIO_initPeripheralOutputFunction(
+        GPIO_IMU601_IOMUX_TX, GPIO_IMU601_IOMUX_TX_FUNC);
+    DL_GPIO_initPeripheralInputFunction(
+        GPIO_IMU601_IOMUX_RX, GPIO_IMU601_IOMUX_RX_FUNC);
+    DL_GPIO_initPeripheralOutputFunction(
+        GPIO_CHASSIS_UART_IOMUX_TX, GPIO_CHASSIS_UART_IOMUX_TX_FUNC);
+    DL_GPIO_initPeripheralInputFunction(
+        GPIO_CHASSIS_UART_IOMUX_RX, GPIO_CHASSIS_UART_IOMUX_RX_FUNC);
 
     DL_GPIO_initDigitalOutput(MOTOR_DIR_MOTOR1_DIR_IOMUX);
 
@@ -124,11 +155,91 @@ SYSCONFIG_WEAK void SYSCFG_DL_GPIO_init(void)
 
     DL_GPIO_initDigitalOutput(MOTOR_DIR_MOTOR2_ENABLE_IOMUX);
 
-    DL_GPIO_clearPins(MOTOR_DIR_PORT, MOTOR_DIR_MOTOR1_DIR_PIN |
+    DL_GPIO_initDigitalInputFeatures(LINE_SENSOR_LINE0_IOMUX,
+		 DL_GPIO_INVERSION_DISABLE, DL_GPIO_RESISTOR_NONE,
+		 DL_GPIO_HYSTERESIS_DISABLE, DL_GPIO_WAKEUP_DISABLE);
+
+    DL_GPIO_initDigitalInputFeatures(LINE_SENSOR_LINE1_IOMUX,
+		 DL_GPIO_INVERSION_DISABLE, DL_GPIO_RESISTOR_NONE,
+		 DL_GPIO_HYSTERESIS_DISABLE, DL_GPIO_WAKEUP_DISABLE);
+
+    DL_GPIO_initDigitalInputFeatures(LINE_SENSOR_LINE2_IOMUX,
+		 DL_GPIO_INVERSION_DISABLE, DL_GPIO_RESISTOR_NONE,
+		 DL_GPIO_HYSTERESIS_DISABLE, DL_GPIO_WAKEUP_DISABLE);
+
+    DL_GPIO_initDigitalInputFeatures(LINE_SENSOR_LINE3_IOMUX,
+		 DL_GPIO_INVERSION_DISABLE, DL_GPIO_RESISTOR_NONE,
+		 DL_GPIO_HYSTERESIS_DISABLE, DL_GPIO_WAKEUP_DISABLE);
+
+    DL_GPIO_initDigitalInputFeatures(LINE_SENSOR_LINE4_IOMUX,
+		 DL_GPIO_INVERSION_DISABLE, DL_GPIO_RESISTOR_NONE,
+		 DL_GPIO_HYSTERESIS_DISABLE, DL_GPIO_WAKEUP_DISABLE);
+
+    DL_GPIO_initDigitalInputFeatures(LINE_SENSOR_LINE5_IOMUX,
+		 DL_GPIO_INVERSION_DISABLE, DL_GPIO_RESISTOR_NONE,
+		 DL_GPIO_HYSTERESIS_DISABLE, DL_GPIO_WAKEUP_DISABLE);
+
+    DL_GPIO_initDigitalInputFeatures(LINE_SENSOR_LINE6_IOMUX,
+		 DL_GPIO_INVERSION_DISABLE, DL_GPIO_RESISTOR_NONE,
+		 DL_GPIO_HYSTERESIS_DISABLE, DL_GPIO_WAKEUP_DISABLE);
+
+    DL_GPIO_initDigitalInputFeatures(LINE_SENSOR_LINE7_IOMUX,
+		 DL_GPIO_INVERSION_DISABLE, DL_GPIO_RESISTOR_NONE,
+		 DL_GPIO_HYSTERESIS_DISABLE, DL_GPIO_WAKEUP_DISABLE);
+
+    DL_GPIO_initDigitalInputFeatures(LINE_SENSOR_LINE8_IOMUX,
+		 DL_GPIO_INVERSION_DISABLE, DL_GPIO_RESISTOR_NONE,
+		 DL_GPIO_HYSTERESIS_DISABLE, DL_GPIO_WAKEUP_DISABLE);
+
+    DL_GPIO_initDigitalInputFeatures(LINE_SENSOR_LINE9_IOMUX,
+		 DL_GPIO_INVERSION_DISABLE, DL_GPIO_RESISTOR_NONE,
+		 DL_GPIO_HYSTERESIS_DISABLE, DL_GPIO_WAKEUP_DISABLE);
+
+    DL_GPIO_initDigitalInputFeatures(LINE_SENSOR_LINE10_IOMUX,
+		 DL_GPIO_INVERSION_DISABLE, DL_GPIO_RESISTOR_NONE,
+		 DL_GPIO_HYSTERESIS_DISABLE, DL_GPIO_WAKEUP_DISABLE);
+
+    DL_GPIO_initDigitalInputFeatures(LINE_SENSOR_LINE11_IOMUX,
+		 DL_GPIO_INVERSION_DISABLE, DL_GPIO_RESISTOR_NONE,
+		 DL_GPIO_HYSTERESIS_DISABLE, DL_GPIO_WAKEUP_DISABLE);
+
+    DL_GPIO_initDigitalInputFeatures(BUTTONS_MODE_IOMUX,
+		 DL_GPIO_INVERSION_DISABLE, DL_GPIO_RESISTOR_PULL_UP,
+		 DL_GPIO_HYSTERESIS_DISABLE, DL_GPIO_WAKEUP_DISABLE);
+
+    DL_GPIO_initDigitalInputFeatures(BUTTONS_UP_IOMUX,
+		 DL_GPIO_INVERSION_DISABLE, DL_GPIO_RESISTOR_PULL_UP,
+		 DL_GPIO_HYSTERESIS_DISABLE, DL_GPIO_WAKEUP_DISABLE);
+
+    DL_GPIO_initDigitalInputFeatures(BUTTONS_DOWN_IOMUX,
+		 DL_GPIO_INVERSION_DISABLE, DL_GPIO_RESISTOR_PULL_UP,
+		 DL_GPIO_HYSTERESIS_DISABLE, DL_GPIO_WAKEUP_DISABLE);
+
+    DL_GPIO_initDigitalInputFeatures(EXTRA_BUTTONS_KEY1_IOMUX,
+		 DL_GPIO_INVERSION_DISABLE, DL_GPIO_RESISTOR_PULL_UP,
+		 DL_GPIO_HYSTERESIS_DISABLE, DL_GPIO_WAKEUP_DISABLE);
+
+    DL_GPIO_initDigitalInputFeatures(EXTRA_BUTTONS_KEY2_IOMUX,
+		 DL_GPIO_INVERSION_DISABLE, DL_GPIO_RESISTOR_PULL_UP,
+		 DL_GPIO_HYSTERESIS_DISABLE, DL_GPIO_WAKEUP_DISABLE);
+
+    DL_GPIO_initDigitalInputFeatures(EXTRA_BUTTONS_KEY3_IOMUX,
+		 DL_GPIO_INVERSION_DISABLE, DL_GPIO_RESISTOR_PULL_UP,
+		 DL_GPIO_HYSTERESIS_DISABLE, DL_GPIO_WAKEUP_DISABLE);
+
+    DL_GPIO_initDigitalInputFeatures(EXTRA_BUTTONS_KEY4_IOMUX,
+		 DL_GPIO_INVERSION_DISABLE, DL_GPIO_RESISTOR_PULL_UP,
+		 DL_GPIO_HYSTERESIS_DISABLE, DL_GPIO_WAKEUP_DISABLE);
+
+    DL_GPIO_initDigitalInputFeatures(EXTRA_BUTTONS_KEY5_IOMUX,
+		 DL_GPIO_INVERSION_DISABLE, DL_GPIO_RESISTOR_PULL_UP,
+		 DL_GPIO_HYSTERESIS_DISABLE, DL_GPIO_WAKEUP_DISABLE);
+
+    DL_GPIO_clearPins(GPIOA, MOTOR_DIR_MOTOR1_DIR_PIN |
 		MOTOR_DIR_MOTOR2_DIR_PIN |
 		MOTOR_DIR_MOTOR1_ENABLE_PIN |
 		MOTOR_DIR_MOTOR2_ENABLE_PIN);
-    DL_GPIO_enableOutput(MOTOR_DIR_PORT, MOTOR_DIR_MOTOR1_DIR_PIN |
+    DL_GPIO_enableOutput(GPIOA, MOTOR_DIR_MOTOR1_DIR_PIN |
 		MOTOR_DIR_MOTOR2_DIR_PIN |
 		MOTOR_DIR_MOTOR1_ENABLE_PIN |
 		MOTOR_DIR_MOTOR2_ENABLE_PIN);
@@ -351,6 +462,36 @@ SYSCONFIG_WEAK void SYSCFG_DL_YAW_PWM_init(void) {
 }
 
 
+static const DL_I2C_ClockConfig gOLEDClockConfig = {
+    .clockSel = DL_I2C_CLOCK_BUSCLK,
+    .divideRatio = DL_I2C_CLOCK_DIVIDE_1,
+};
+
+SYSCONFIG_WEAK void SYSCFG_DL_OLED_init(void) {
+
+    DL_I2C_setClockConfig(OLED_INST,
+        (DL_I2C_ClockConfig *) &gOLEDClockConfig);
+    DL_I2C_setAnalogGlitchFilterPulseWidth(OLED_INST,
+        DL_I2C_ANALOG_GLITCH_FILTER_WIDTH_50NS);
+    DL_I2C_enableAnalogGlitchFilter(OLED_INST);
+    DL_I2C_setDigitalGlitchFilterPulseWidth(OLED_INST,
+        DL_I2C_DIGITAL_GLITCH_FILTER_WIDTH_CLOCKS_1);
+
+    /* Configure Controller Mode */
+    DL_I2C_resetControllerTransfer(OLED_INST);
+    /* Set frequency to 400000 Hz*/
+    DL_I2C_setTimerPeriod(OLED_INST, 9);
+    DL_I2C_setControllerTXFIFOThreshold(OLED_INST, DL_I2C_TX_FIFO_LEVEL_EMPTY);
+    DL_I2C_setControllerRXFIFOThreshold(OLED_INST, DL_I2C_RX_FIFO_LEVEL_BYTES_1);
+    DL_I2C_enableControllerClockStretching(OLED_INST);
+
+
+    /* Enable module */
+    DL_I2C_enableController(OLED_INST);
+
+
+}
+
 static const DL_UART_Main_ClockConfig gTRACKING_UARTClockConfig = {
     .clockSel    = DL_UART_MAIN_CLOCK_BUSCLK,
     .divideRatio = DL_UART_MAIN_CLOCK_DIVIDE_RATIO_1
@@ -385,6 +526,76 @@ SYSCONFIG_WEAK void SYSCFG_DL_TRACKING_UART_init(void)
 
 
     DL_UART_Main_enable(TRACKING_UART_INST);
+}
+static const DL_UART_Main_ClockConfig gIMU601ClockConfig = {
+    .clockSel    = DL_UART_MAIN_CLOCK_BUSCLK,
+    .divideRatio = DL_UART_MAIN_CLOCK_DIVIDE_RATIO_1
+};
+
+static const DL_UART_Main_Config gIMU601Config = {
+    .mode        = DL_UART_MAIN_MODE_NORMAL,
+    .direction   = DL_UART_MAIN_DIRECTION_TX_RX,
+    .flowControl = DL_UART_MAIN_FLOW_CONTROL_NONE,
+    .parity      = DL_UART_MAIN_PARITY_NONE,
+    .wordLength  = DL_UART_MAIN_WORD_LENGTH_8_BITS,
+    .stopBits    = DL_UART_MAIN_STOP_BITS_ONE
+};
+
+SYSCONFIG_WEAK void SYSCFG_DL_IMU601_init(void)
+{
+    DL_UART_Main_setClockConfig(IMU601_INST, (DL_UART_Main_ClockConfig *) &gIMU601ClockConfig);
+
+    DL_UART_Main_init(IMU601_INST, (DL_UART_Main_Config *) &gIMU601Config);
+    /*
+     * Configure baud rate by setting oversampling and baud rate divisors.
+     *  Target baud rate: 115200
+     *  Actual baud rate: 115190.78
+     */
+    DL_UART_Main_setOversampling(IMU601_INST, DL_UART_OVERSAMPLING_RATE_16X);
+    DL_UART_Main_setBaudRateDivisor(IMU601_INST, IMU601_IBRD_80_MHZ_115200_BAUD, IMU601_FBRD_80_MHZ_115200_BAUD);
+
+
+    /* Configure Interrupts */
+    DL_UART_Main_enableInterrupt(IMU601_INST,
+                                 DL_UART_MAIN_INTERRUPT_RX);
+
+
+    DL_UART_Main_enable(IMU601_INST);
+}
+static const DL_UART_Main_ClockConfig gCHASSIS_UARTClockConfig = {
+    .clockSel    = DL_UART_MAIN_CLOCK_BUSCLK,
+    .divideRatio = DL_UART_MAIN_CLOCK_DIVIDE_RATIO_1
+};
+
+static const DL_UART_Main_Config gCHASSIS_UARTConfig = {
+    .mode        = DL_UART_MAIN_MODE_NORMAL,
+    .direction   = DL_UART_MAIN_DIRECTION_TX_RX,
+    .flowControl = DL_UART_MAIN_FLOW_CONTROL_NONE,
+    .parity      = DL_UART_MAIN_PARITY_NONE,
+    .wordLength  = DL_UART_MAIN_WORD_LENGTH_8_BITS,
+    .stopBits    = DL_UART_MAIN_STOP_BITS_ONE
+};
+
+SYSCONFIG_WEAK void SYSCFG_DL_CHASSIS_UART_init(void)
+{
+    DL_UART_Main_setClockConfig(CHASSIS_UART_INST, (DL_UART_Main_ClockConfig *) &gCHASSIS_UARTClockConfig);
+
+    DL_UART_Main_init(CHASSIS_UART_INST, (DL_UART_Main_Config *) &gCHASSIS_UARTConfig);
+    /*
+     * Configure baud rate by setting oversampling and baud rate divisors.
+     *  Target baud rate: 115200
+     *  Actual baud rate: 115190.78
+     */
+    DL_UART_Main_setOversampling(CHASSIS_UART_INST, DL_UART_OVERSAMPLING_RATE_16X);
+    DL_UART_Main_setBaudRateDivisor(CHASSIS_UART_INST, CHASSIS_UART_IBRD_40_MHZ_115200_BAUD, CHASSIS_UART_FBRD_40_MHZ_115200_BAUD);
+
+
+    /* Configure Interrupts */
+    DL_UART_Main_enableInterrupt(CHASSIS_UART_INST,
+                                 DL_UART_MAIN_INTERRUPT_RX);
+
+
+    DL_UART_Main_enable(CHASSIS_UART_INST);
 }
 
 SYSCONFIG_WEAK void SYSCFG_DL_SYSTICK_init(void)
