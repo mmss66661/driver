@@ -8,6 +8,8 @@
 #define OLED_WIDTH         (128U)
 #define OLED_PAGES         (8U)
 #define OLED_I2C_TIMEOUT   (CPUCLK_FREQ / 100U)
+#define OLED_DATA_CHUNK    (7U)
+#define OLED_I2C_START_DELAY_CYCLES (3U)
 
 typedef struct {
     char character;
@@ -17,7 +19,9 @@ typedef struct {
 /* Compact 5x7 font: sufficient for status text, numbers and punctuation. */
 static const Glyph gFont[] = {
     {' ', {0x00,0x00,0x00,0x00,0x00}}, {'-', {0x08,0x08,0x08,0x08,0x08}},
-    {'.', {0x00,0x60,0x60,0x00,0x00}}, {':', {0x00,0x36,0x36,0x00,0x00}},
+    {'(', {0x00,0x1C,0x22,0x41,0x00}}, {')', {0x00,0x41,0x22,0x1C,0x00}},
+    {',', {0x00,0x50,0x30,0x00,0x00}}, {'.', {0x00,0x60,0x60,0x00,0x00}},
+    {':', {0x00,0x36,0x36,0x00,0x00}},
     {'/', {0x20,0x10,0x08,0x04,0x02}}, {'0', {0x3E,0x51,0x49,0x45,0x3E}},
     {'1', {0x00,0x42,0x7F,0x40,0x00}}, {'2', {0x42,0x61,0x51,0x49,0x46}},
     {'3', {0x21,0x41,0x45,0x4B,0x31}}, {'4', {0x18,0x14,0x12,0x7F,0x10}},
@@ -40,7 +44,14 @@ static const Glyph gFont[] = {
 };
 
 static uint8_t gBuffer[OLED_WIDTH][OLED_PAGES];
+static uint8_t gTransmitBuffer[OLED_WIDTH][OLED_PAGES];
 static bool gPresent;
+static bool gRefreshActive;
+static bool gRefreshQueued;
+static bool gPageAddressPending;
+static bool gInitializationAttempted;
+static uint8_t gRefreshPage;
+static uint8_t gRefreshX;
 
 static const uint8_t *findGlyph(char character)
 {
@@ -70,6 +81,9 @@ static bool writePacket(const uint8_t *data, uint8_t length)
     DL_I2C_startControllerTransfer(OLED_INST, OLED_ADDRESS,
         DL_I2C_CONTROLLER_DIRECTION_TX, length);
 
+    /* MSPM0 I2C_ERR_13: wait three functional clocks before polling status. */
+    delay_cycles(OLED_I2C_START_DELAY_CYCLES);
+
     timeout = OLED_I2C_TIMEOUT;
     do {
         status = DL_I2C_getControllerStatus(OLED_INST);
@@ -93,6 +107,32 @@ static bool writeCommand(uint8_t command)
     return writePacket(packet, sizeof(packet));
 }
 
+static void beginRefresh(void)
+{
+    memcpy(gTransmitBuffer, gBuffer, sizeof(gTransmitBuffer));
+    gRefreshPage = 0U;
+    gRefreshX = 0U;
+    gPageAddressPending = true;
+    gRefreshActive = true;
+}
+
+static void failRefresh(void)
+{
+    gPresent = false;
+    gRefreshActive = false;
+    gRefreshQueued = false;
+}
+
+static void completeRefresh(void)
+{
+    if (gRefreshQueued) {
+        gRefreshQueued = false;
+        beginRefresh();
+    } else {
+        gRefreshActive = false;
+    }
+}
+
 bool OLED_Init(void)
 {
     static const uint8_t commands[] = {
@@ -102,9 +142,16 @@ bool OLED_Init(void)
     };
     uint32_t i;
 
-    /* Allow the four-pin SSD1306 module's internal reset to finish. */
-    delay_cycles(CPUCLK_FREQ / 10U);
+    if (!gInitializationAttempted) {
+        /* Allow the four-pin SSD1306 module's internal reset to finish. */
+        delay_cycles(CPUCLK_FREQ / 10U);
+        gInitializationAttempted = true;
+    }
     gPresent = true;
+    gRefreshActive = false;
+    gRefreshQueued = false;
+    DL_I2C_resetControllerTransfer(OLED_INST);
+    DL_I2C_flushControllerTXFIFO(OLED_INST);
     for (i = 0U; i < sizeof(commands); i++) {
         if (!writeCommand(commands[i])) {
             gPresent = false;
@@ -143,33 +190,60 @@ void OLED_ShowString(uint8_t x, uint8_t y, const char *text)
 
 bool OLED_Refresh(void)
 {
-    uint8_t page;
     if (!gPresent) {
         return false;
     }
-    for (page = 0U; page < OLED_PAGES; page++) {
-        uint8_t x;
-        if (!writeCommand((uint8_t) (0xB0U + page)) ||
-            !writeCommand(0x00U) || !writeCommand(0x10U)) {
-            gPresent = false;
-            return false;
-        }
-        for (x = 0U; x < OLED_WIDTH; x = (uint8_t) (x + 7U)) {
-            uint8_t packet[8];
-            uint8_t count = (uint8_t) (OLED_WIDTH - x);
-            uint8_t i;
-            if (count > 7U) {
-                count = 7U;
-            }
-            packet[0] = 0x40U;
-            for (i = 0U; i < count; i++) {
-                packet[i + 1U] = gBuffer[x + i][page];
-            }
-            if (!writePacket(packet, (uint8_t) (count + 1U))) {
-                gPresent = false;
-                return false;
-            }
-        }
+    if (gRefreshActive) {
+        gRefreshQueued = true;
+    } else {
+        beginRefresh();
     }
     return true;
+}
+
+void OLED_Process(void)
+{
+    uint8_t packet[OLED_DATA_CHUNK + 1U];
+    uint8_t count;
+    uint8_t i;
+
+    if (!gPresent || !gRefreshActive) {
+        return;
+    }
+
+    if (gPageAddressPending) {
+        uint8_t addressPacket[4] = {
+            0x00U, (uint8_t) (0xB0U + gRefreshPage), 0x00U, 0x10U
+        };
+        if (!writePacket(addressPacket, sizeof(addressPacket))) {
+            failRefresh();
+            return;
+        }
+        gPageAddressPending = false;
+        return;
+    }
+
+    count = (uint8_t) (OLED_WIDTH - gRefreshX);
+    if (count > OLED_DATA_CHUNK) {
+        count = OLED_DATA_CHUNK;
+    }
+    packet[0] = 0x40U;
+    for (i = 0U; i < count; i++) {
+        packet[i + 1U] = gTransmitBuffer[gRefreshX + i][gRefreshPage];
+    }
+    if (!writePacket(packet, (uint8_t) (count + 1U))) {
+        failRefresh();
+        return;
+    }
+
+    gRefreshX = (uint8_t) (gRefreshX + count);
+    if (gRefreshX >= OLED_WIDTH) {
+        gRefreshX = 0U;
+        gRefreshPage++;
+        if (gRefreshPage >= OLED_PAGES) {
+            completeRefresh();
+        } else {
+            gPageAddressPending = true;
+        }
+    }
 }

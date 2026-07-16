@@ -7,12 +7,19 @@ SHELL = cmd.exe
 CG_TOOL_ROOT := E:/ccs/tools/compiler/ti-cgt-armllvm_4.0.4.LTS
 
 GEN_OPTS__FLAG := @"./device.opt" 
-GEN_CMDS__FLAG := -Wl,-l"./device_linker.cmd" 
+GEN_CMDS__FLAG := -Wl,-l"./device_linker.cmd" -Wl,-l"../path_flash.cmd" 
 
 ORDERED_OBJS += \
+"./buttons.o" \
+"./chassis_motor.o" \
 "./empty.o" \
 "./ti_msp_dl_config.o" \
 "./startup_mspm0g350x_ticlang.o" \
+"./imu601.o" \
+"./line_follower.o" \
+"./line_sensor.o" \
+"./oled.o" \
+"./path_navigation.o" \
 "./stepper_motor.o" \
 "./tracking_controller.o" \
 $(GEN_CMDS__FLAG) \
@@ -138,8 +145,8 @@ driver.out: $(OBJS) $(GEN_CMDS)
 # Other Targets
 clean:
 	-$(RM) $(GEN_MISC_FILES__QUOTED)$(GEN_FILES__QUOTED)$(EXE_OUTPUTS__QUOTED)
-	-$(RM) "empty.o" "ti_msp_dl_config.o" "startup_mspm0g350x_ticlang.o" "stepper_motor.o" "tracking_controller.o" 
-	-$(RM) "empty.d" "ti_msp_dl_config.d" "startup_mspm0g350x_ticlang.d" "stepper_motor.d" "tracking_controller.d" 
+	-$(RM) "buttons.o" "chassis_motor.o" "empty.o" "ti_msp_dl_config.o" "startup_mspm0g350x_ticlang.o" "imu601.o" "line_follower.o" "line_sensor.o" "oled.o" "path_navigation.o" "stepper_motor.o" "tracking_controller.o" 
+	-$(RM) "buttons.d" "chassis_motor.d" "empty.d" "ti_msp_dl_config.d" "startup_mspm0g350x_ticlang.d" "imu601.d" "line_follower.d" "line_sensor.d" "oled.d" "path_navigation.d" "stepper_motor.d" "tracking_controller.d" 
 	-@echo ' '
 
 .PHONY: all clean dependents

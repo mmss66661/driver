@@ -13,13 +13,16 @@ typedef struct {
 
 static Button_State gButtons[BUTTON_COUNT];
 static const uint32_t gButtonPins[BUTTON_COUNT] = {
-    BUTTONS_MODE_PIN, BUTTONS_UP_PIN, BUTTONS_DOWN_PIN
+    BUTTONS_MODE_PIN, BUTTONS_UP_PIN, BUTTONS_DOWN_PIN,
+    EXTRA_BUTTONS_KEY1_PIN
 };
 
 static bool readDown(Button_Id id)
 {
     /* Buttons use pull-ups and are active low. */
-    return DL_GPIO_readPins(BUTTONS_PORT, gButtonPins[id]) == 0U;
+    GPIO_Regs *port = (id == BUTTON_KEY1) ?
+        EXTRA_BUTTONS_PORT : BUTTONS_PORT;
+    return DL_GPIO_readPins(port, gButtonPins[id]) == 0U;
 }
 
 void Buttons_init(void)

@@ -14,7 +14,8 @@
 #define CHASSIS_RIGHT_MOTOR_INVERTED       (0)
 #define CHASSIS_LEFT_ENCODER_REVERSED      (1U)
 #define CHASSIS_RIGHT_ENCODER_REVERSED     (1U)
-#define CHASSIS_RX_BUFFER_SIZE             (24U)
+#define CHASSIS_ENCODER_BYTE_COUNT         (8U)
+#define CHASSIS_RX_BUFFER_SIZE             (13U)
 
 static volatile ChassisMotor_Status gStatus;
 static volatile uint8_t gRxBuffer[CHASSIS_RX_BUFFER_SIZE];
@@ -23,9 +24,10 @@ static volatile uint8_t gExpectedLength;
 static int16_t gTargetLeft;
 static int16_t gTargetRight;
 static uint32_t gLastCommandTime;
-static uint32_t gLastTransmitTime;
+static uint32_t gLastSpeedTransmitTime;
 static bool gCommandValid;
 static bool gTransmitImmediately;
+static bool gClosedLoopEnabled;
 
 static uint16_t crc16(const uint8_t *data, uint8_t length)
 {
@@ -98,16 +100,6 @@ static void sendSpeeds(int16_t left, int16_t right)
     sendFrame(frame, 15U);
 }
 
-static uint16_t pidToRegister(float value)
-{
-    float scaled;
-    if (value <= 0.0f) {
-        return 0U;
-    }
-    scaled = value * 1000.0f;
-    return (scaled >= 65535.0f) ? 65535U : (uint16_t) scaled;
-}
-
 static void delayMs(uint32_t milliseconds)
 {
     while (milliseconds-- != 0U) {
@@ -132,6 +124,15 @@ static void resetParser(void)
     gExpectedLength = 0U;
 }
 
+static void enterClosedLoop(void)
+{
+    if (!gClosedLoopEnabled) {
+        writeSingleRegister(0x0008U, 0x0001U);
+        delayMs(50U);
+        gClosedLoopEnabled = true;
+    }
+}
+
 static void acceptFrame(void)
 {
     uint8_t length = gExpectedLength;
@@ -153,6 +154,8 @@ static void acceptFrame(void)
                 (((uint16_t) gRxBuffer[3U + i * 2U] << 8U) |
                  gRxBuffer[4U + i * 2U]);
         }
+        gStatus.leftEncoderCount = gStatus.feedback[0];
+        gStatus.rightEncoderCount = gStatus.feedback[1];
         gStatus.feedbackFrameCount++;
     } else {
         gStatus.acknowledgementCount++;
@@ -183,8 +186,7 @@ static void parseByte(uint8_t byte)
         }
     } else if ((gRxIndex == 3U) &&
                (gRxBuffer[1] == MODBUS_READ_HOLDING)) {
-        if (((byte & 1U) != 0U) ||
-            (byte > (CHASSIS_FEEDBACK_REGISTERS * 2U))) {
+        if (byte != CHASSIS_ENCODER_BYTE_COUNT) {
             resetParser();
         } else {
             gExpectedLength = (uint8_t) (byte + 5U);
@@ -203,9 +205,10 @@ void ChassisMotor_init(void)
     gTargetLeft = 0;
     gTargetRight = 0;
     gLastCommandTime = 0U;
-    gLastTransmitTime = 0U;
+    gLastSpeedTransmitTime = 0U;
     gCommandValid = false;
     gTransmitImmediately = false;
+    gClosedLoopEnabled = false;
     resetParser();
     gStatus.leftCommand = 0;
     gStatus.rightCommand = 0;
@@ -213,6 +216,8 @@ void ChassisMotor_init(void)
         gStatus.feedback[i] = 0;
     }
     gStatus.feedbackFrameCount = 0U;
+    gStatus.leftEncoderCount = 0;
+    gStatus.rightEncoderCount = 0;
     gStatus.acknowledgementCount = 0U;
     gStatus.crcErrorCount = 0U;
     gStatus.uartErrorCount = 0U;
@@ -221,17 +226,16 @@ void ChassisMotor_init(void)
     NVIC_ClearPendingIRQ(CHASSIS_UART_INST_INT_IRQN);
     NVIC_EnableIRQ(CHASSIS_UART_INST_INT_IRQN);
 
-    writeSingleRegister(0x0008U, 0x0001U);
-    delayMs(50U);
     writeSingleRegister(0x0009U, CHASSIS_LEFT_ENCODER_REVERSED);
     delayMs(50U);
     writeSingleRegister(0x000AU, CHASSIS_RIGHT_ENCODER_REVERSED);
-    delayMs(50U);
-    sendSpeeds(0, 0);
 }
 
 void ChassisMotor_process(uint32_t nowMs)
 {
+    if (!gClosedLoopEnabled) {
+        return;
+    }
     if (gCommandValid &&
         ((nowMs - gLastCommandTime) > CHASSIS_COMMAND_TIMEOUT_MS)) {
         gTargetLeft = 0;
@@ -244,9 +248,9 @@ void ChassisMotor_process(uint32_t nowMs)
     }
 
     if (gTransmitImmediately ||
-        ((nowMs - gLastTransmitTime) >= CHASSIS_TX_PERIOD_MS)) {
+        ((nowMs - gLastSpeedTransmitTime) >= CHASSIS_TX_PERIOD_MS)) {
         gTransmitImmediately = false;
-        gLastTransmitTime = nowMs;
+        gLastSpeedTransmitTime = nowMs;
         sendSpeeds(gTargetLeft, gTargetRight);
     }
 }
@@ -254,11 +258,15 @@ void ChassisMotor_process(uint32_t nowMs)
 void ChassisMotor_setWheelSpeeds(
     int16_t leftSpeed, int16_t rightSpeed, uint32_t nowMs)
 {
+    if (((leftSpeed != 0) || (rightSpeed != 0)) &&
+        !gClosedLoopEnabled) {
+        enterClosedLoop();
+    }
     gTargetLeft = leftSpeed;
     gTargetRight = rightSpeed;
     gLastCommandTime = nowMs;
     gCommandValid = true;
-    gTransmitImmediately = true;
+    gTransmitImmediately = gClosedLoopEnabled;
     gStatus.leftCommand = leftSpeed;
     gStatus.rightCommand = rightSpeed;
     gStatus.commandTimedOut = false;
@@ -279,29 +287,9 @@ void ChassisMotor_stop(uint32_t nowMs)
     ChassisMotor_setWheelSpeeds(0, 0, nowMs);
 }
 
-void ChassisMotor_setPid(float leftKp, float leftKi, float leftKd,
-    float rightKp, float rightKi, float rightKd)
+bool ChassisMotor_isClosedLoopEnabled(void)
 {
-    uint8_t frame[33];
-    uint16_t values[12] = {
-        pidToRegister(leftKp), pidToRegister(leftKi), pidToRegister(leftKd),
-        pidToRegister(rightKp), pidToRegister(rightKi), pidToRegister(rightKd),
-        0U, 0U, 0U, 0U, 0U, 0U
-    };
-    uint8_t i;
-
-    frame[0] = MODBUS_ADDRESS;
-    frame[1] = MODBUS_WRITE_MULTIPLE;
-    frame[2] = 0x00U;
-    frame[3] = 0x15U;
-    frame[4] = 0x00U;
-    frame[5] = 0x0CU;
-    frame[6] = 0x18U;
-    for (i = 0U; i < 12U; i++) {
-        frame[7U + i * 2U] = (uint8_t) (values[i] >> 8U);
-        frame[8U + i * 2U] = (uint8_t) values[i];
-    }
-    sendFrame(frame, 31U);
+    return gClosedLoopEnabled;
 }
 
 void ChassisMotor_getStatus(ChassisMotor_Status *status)

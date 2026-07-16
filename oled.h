@@ -9,5 +9,6 @@ bool OLED_IsPresent(void);
 void OLED_Clear(void);
 void OLED_ShowString(uint8_t x, uint8_t y, const char *text);
 bool OLED_Refresh(void);
+void OLED_Process(void);
 
 #endif

@@ -1,6 +1,6 @@
 # FIXED
 
-empty.o: ../empty.c \
+buttons.o: ../buttons.c ../buttons.h \
  ti_msp_dl_config.h \
  C:/TI/mspm0_sdk_2_10_00_04/source/ti/devices/msp/msp.h \
  C:/TI/mspm0_sdk_2_10_00_04/source/ti/devices/DeviceFamily.h \
@@ -83,9 +83,8 @@ empty.o: ../empty.c \
  C:/TI/mspm0_sdk_2_10_00_04/source/ti/driverlib/dl_vref.h \
  C:/TI/mspm0_sdk_2_10_00_04/source/ti/driverlib/dl_wwdt.h \
  C:/TI/mspm0_sdk_2_10_00_04/source/ti/driverlib/m0p/dl_interrupt.h \
- C:/TI/mspm0_sdk_2_10_00_04/source/ti/driverlib/m0p/dl_systick.h \
- ../buttons.h ../chassis_motor.h ../imu601.h ../line_follower.h \
- ../line_sensor.h ../oled.h ../stepper_motor.h ../tracking_controller.h
+ C:/TI/mspm0_sdk_2_10_00_04/source/ti/driverlib/m0p/dl_systick.h
+../buttons.h:
 ti_msp_dl_config.h:
 C:/TI/mspm0_sdk_2_10_00_04/source/ti/devices/msp/msp.h:
 C:/TI/mspm0_sdk_2_10_00_04/source/ti/devices/DeviceFamily.h:
@@ -169,11 +168,3 @@ C:/TI/mspm0_sdk_2_10_00_04/source/ti/driverlib/dl_vref.h:
 C:/TI/mspm0_sdk_2_10_00_04/source/ti/driverlib/dl_wwdt.h:
 C:/TI/mspm0_sdk_2_10_00_04/source/ti/driverlib/m0p/dl_interrupt.h:
 C:/TI/mspm0_sdk_2_10_00_04/source/ti/driverlib/m0p/dl_systick.h:
-../buttons.h:
-../chassis_motor.h:
-../imu601.h:
-../line_follower.h:
-../line_sensor.h:
-../oled.h:
-../stepper_motor.h:
-../tracking_controller.h:

@@ -71,8 +71,10 @@ static void parseByte(uint8_t byte)
             break;
         case 7U:
             if (byte == FRAME_TAIL_1) {
-                uint16_t rawX = ((uint16_t) gPayload[0] << 8U) | gPayload[1];
-                uint16_t rawY = ((uint16_t) gPayload[2] << 8U) | gPayload[3];
+                uint16_t rawX = (uint16_t) gPayload[0] |
+                                ((uint16_t) gPayload[1] << 8U);
+                uint16_t rawY = (uint16_t) gPayload[2] |
+                                ((uint16_t) gPayload[3] << 8U);
                 gPendingErrX = decodeSigned16(rawX);
                 gPendingErrY = decodeSigned16(rawY);
                 gFrameReady  = true;
@@ -136,7 +138,7 @@ void TrackingController_init(void)
     gLastFrameTime    = 0U;
     gErrX             = 0;
     gErrY             = 0;
-    gTrackingEnabled  = true;
+    gTrackingEnabled  = false;
 
     /* SysConfig starts SysTick; its interrupt must be enabled separately. */
     DL_SYSTICK_enableInterrupt();

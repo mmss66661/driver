@@ -8,6 +8,7 @@ typedef enum {
     BUTTON_MODE = 0,
     BUTTON_UP,
     BUTTON_DOWN,
+    BUTTON_KEY1,
     BUTTON_COUNT
 } Button_Id;
 

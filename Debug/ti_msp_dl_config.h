@@ -175,6 +175,22 @@ bool SYSCFG_DL_SYSCTL_SYSPLL_init(void);
 #define CHASSIS_UART_BAUD_RATE                                          (115200)
 #define CHASSIS_UART_IBRD_40_MHZ_115200_BAUD                                (21)
 #define CHASSIS_UART_FBRD_40_MHZ_115200_BAUD                                (45)
+/* Defines for UART_0 */
+#define UART_0_INST                                                        UART2
+#define UART_0_INST_FREQUENCY                                           40000000
+#define UART_0_INST_IRQHandler                                  UART2_IRQHandler
+#define UART_0_INST_INT_IRQN                                      UART2_INT_IRQn
+#define GPIO_UART_0_RX_PORT                                                GPIOA
+#define GPIO_UART_0_TX_PORT                                                GPIOA
+#define GPIO_UART_0_RX_PIN                                        DL_GPIO_PIN_22
+#define GPIO_UART_0_TX_PIN                                        DL_GPIO_PIN_21
+#define GPIO_UART_0_IOMUX_RX                                     (IOMUX_PINCM47)
+#define GPIO_UART_0_IOMUX_TX                                     (IOMUX_PINCM46)
+#define GPIO_UART_0_IOMUX_RX_FUNC                      IOMUX_PINCM47_PF_UART2_RX
+#define GPIO_UART_0_IOMUX_TX_FUNC                      IOMUX_PINCM46_PF_UART2_TX
+#define UART_0_BAUD_RATE                                                  (9600)
+#define UART_0_IBRD_40_MHZ_9600_BAUD                                       (260)
+#define UART_0_FBRD_40_MHZ_9600_BAUD                                        (27)
 
 
 
@@ -237,21 +253,21 @@ bool SYSCFG_DL_SYSCTL_SYSPLL_init(void);
 /* Port definition for Pin Group BUTTONS */
 #define BUTTONS_PORT                                                     (GPIOA)
 
-/* Defines for MODE: GPIOA.3 with pinCMx 8 on package pin 43 */
-#define BUTTONS_MODE_PIN                                         (DL_GPIO_PIN_3)
-#define BUTTONS_MODE_IOMUX                                        (IOMUX_PINCM8)
-/* Defines for UP: GPIOA.4 with pinCMx 9 on package pin 44 */
-#define BUTTONS_UP_PIN                                           (DL_GPIO_PIN_4)
-#define BUTTONS_UP_IOMUX                                          (IOMUX_PINCM9)
-/* Defines for DOWN: GPIOA.5 with pinCMx 10 on package pin 45 */
-#define BUTTONS_DOWN_PIN                                         (DL_GPIO_PIN_5)
-#define BUTTONS_DOWN_IOMUX                                       (IOMUX_PINCM10)
+/* Defines for MODE: GPIOA.14 with pinCMx 36 on package pin 7 */
+#define BUTTONS_MODE_PIN                                        (DL_GPIO_PIN_14)
+#define BUTTONS_MODE_IOMUX                                       (IOMUX_PINCM36)
+/* Defines for UP: GPIOA.24 with pinCMx 54 on package pin 25 */
+#define BUTTONS_UP_PIN                                          (DL_GPIO_PIN_24)
+#define BUTTONS_UP_IOMUX                                         (IOMUX_PINCM54)
+/* Defines for DOWN: GPIOA.29 with pinCMx 4 on package pin 36 */
+#define BUTTONS_DOWN_PIN                                        (DL_GPIO_PIN_29)
+#define BUTTONS_DOWN_IOMUX                                        (IOMUX_PINCM4)
 /* Port definition for Pin Group EXTRA_BUTTONS */
 #define EXTRA_BUTTONS_PORT                                               (GPIOA)
 
-/* Defines for KEY1: GPIOA.6 with pinCMx 11 on package pin 46 */
-#define EXTRA_BUTTONS_KEY1_PIN                                   (DL_GPIO_PIN_6)
-#define EXTRA_BUTTONS_KEY1_IOMUX                                 (IOMUX_PINCM11)
+/* Defines for KEY1: GPIOA.30 with pinCMx 5 on package pin 37 */
+#define EXTRA_BUTTONS_KEY1_PIN                                  (DL_GPIO_PIN_30)
+#define EXTRA_BUTTONS_KEY1_IOMUX                                  (IOMUX_PINCM5)
 /* Defines for KEY2: GPIOA.7 with pinCMx 14 on package pin 49 */
 #define EXTRA_BUTTONS_KEY2_PIN                                   (DL_GPIO_PIN_7)
 #define EXTRA_BUTTONS_KEY2_IOMUX                                 (IOMUX_PINCM14)
@@ -283,6 +299,7 @@ void SYSCFG_DL_OLED_init(void);
 void SYSCFG_DL_TRACKING_UART_init(void);
 void SYSCFG_DL_IMU601_init(void);
 void SYSCFG_DL_CHASSIS_UART_init(void);
+void SYSCFG_DL_UART_0_init(void);
 
 void SYSCFG_DL_SYSTICK_init(void);
 
