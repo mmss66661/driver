@@ -11,11 +11,11 @@
 #define CHASSIS_TX_PERIOD_MS               (20U)
 #define CHASSIS_COMMAND_TIMEOUT_MS         (250U)
 #define CHASSIS_LEFT_MOTOR_INVERTED        (0)
-#define CHASSIS_RIGHT_MOTOR_INVERTED       (0)
+#define CHASSIS_RIGHT_MOTOR_INVERTED       (1)
 #define CHASSIS_LEFT_ENCODER_REVERSED      (1U)
 #define CHASSIS_RIGHT_ENCODER_REVERSED     (1U)
-#define CHASSIS_ENCODER_BYTE_COUNT         (8U)
-#define CHASSIS_RX_BUFFER_SIZE             (13U)
+#define CHASSIS_ENCODER_BYTE_COUNT         (16U)
+#define CHASSIS_RX_BUFFER_SIZE             (21U)
 
 static volatile ChassisMotor_Status gStatus;
 static volatile uint8_t gRxBuffer[CHASSIS_RX_BUFFER_SIZE];
@@ -124,6 +124,17 @@ static void resetParser(void)
     gExpectedLength = 0U;
 }
 
+static void parseByte(uint8_t byte);
+
+static void drainRxFifo(void)
+{
+    while (!DL_UART_Main_isRXFIFOEmpty(CHASSIS_UART_INST)) {
+        uint8_t byte = (uint8_t)
+            DL_UART_Main_receiveData(CHASSIS_UART_INST);
+        parseByte(byte);
+    }
+}
+
 static void enterClosedLoop(void)
 {
     if (!gClosedLoopEnabled) {
@@ -149,6 +160,9 @@ static void acceptFrame(void)
     if (function == MODBUS_READ_HOLDING) {
         uint8_t registerCount = (uint8_t) (gRxBuffer[2] / 2U);
         uint8_t i;
+        if (registerCount > CHASSIS_FEEDBACK_REGISTERS) {
+            return;
+        }
         for (i = 0U; i < registerCount; i++) {
             gStatus.feedback[i] = (int16_t)
                 (((uint16_t) gRxBuffer[3U + i * 2U] << 8U) |
@@ -309,10 +323,6 @@ void ChassisMotor_getStatus(ChassisMotor_Status *status)
 void CHASSIS_UART_INST_IRQHandler(void)
 {
     switch (DL_UART_Main_getPendingInterrupt(CHASSIS_UART_INST)) {
-        case DL_UART_MAIN_IIDX_RX:
-            parseByte((uint8_t)
-                DL_UART_Main_receiveData(CHASSIS_UART_INST));
-            break;
         case DL_UART_MAIN_IIDX_OVERRUN_ERROR:
         case DL_UART_MAIN_IIDX_FRAMING_ERROR:
         case DL_UART_MAIN_IIDX_PARITY_ERROR:
@@ -323,4 +333,7 @@ void CHASSIS_UART_INST_IRQHandler(void)
         default:
             break;
     }
+
+    /* Drain the FIFO even when the pending reason is a line error. */
+    drainRxFifo();
 }

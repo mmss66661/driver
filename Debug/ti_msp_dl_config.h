@@ -116,7 +116,7 @@ bool SYSCFG_DL_SYSCTL_SYSPLL_init(void);
 #define OLED_INST                                                           I2C1
 #define OLED_INST_IRQHandler                                     I2C1_IRQHandler
 #define OLED_INST_INT_IRQN                                         I2C1_INT_IRQn
-#define OLED_BUS_SPEED_HZ                                                 400000
+#define OLED_BUS_SPEED_HZ                                                 100000
 #define GPIO_OLED_SDA_PORT                                                 GPIOB
 #define GPIO_OLED_SDA_PIN                                          DL_GPIO_PIN_3
 #define GPIO_OLED_IOMUX_SDA                                      (IOMUX_PINCM16)
@@ -161,7 +161,7 @@ bool SYSCFG_DL_SYSCTL_SYSPLL_init(void);
 #define IMU601_FBRD_80_MHZ_115200_BAUD                                      (26)
 /* Defines for CHASSIS_UART */
 #define CHASSIS_UART_INST                                                  UART1
-#define CHASSIS_UART_INST_FREQUENCY                                     40000000
+#define CHASSIS_UART_INST_FREQUENCY                                      4000000
 #define CHASSIS_UART_INST_IRQHandler                            UART1_IRQHandler
 #define CHASSIS_UART_INST_INT_IRQN                                UART1_INT_IRQn
 #define GPIO_CHASSIS_UART_RX_PORT                                          GPIOA
@@ -173,24 +173,8 @@ bool SYSCFG_DL_SYSCTL_SYSPLL_init(void);
 #define GPIO_CHASSIS_UART_IOMUX_RX_FUNC                IOMUX_PINCM20_PF_UART1_RX
 #define GPIO_CHASSIS_UART_IOMUX_TX_FUNC                IOMUX_PINCM19_PF_UART1_TX
 #define CHASSIS_UART_BAUD_RATE                                          (115200)
-#define CHASSIS_UART_IBRD_40_MHZ_115200_BAUD                                (21)
-#define CHASSIS_UART_FBRD_40_MHZ_115200_BAUD                                (45)
-/* Defines for UART_0 */
-#define UART_0_INST                                                        UART2
-#define UART_0_INST_FREQUENCY                                           40000000
-#define UART_0_INST_IRQHandler                                  UART2_IRQHandler
-#define UART_0_INST_INT_IRQN                                      UART2_INT_IRQn
-#define GPIO_UART_0_RX_PORT                                                GPIOA
-#define GPIO_UART_0_TX_PORT                                                GPIOA
-#define GPIO_UART_0_RX_PIN                                        DL_GPIO_PIN_22
-#define GPIO_UART_0_TX_PIN                                        DL_GPIO_PIN_21
-#define GPIO_UART_0_IOMUX_RX                                     (IOMUX_PINCM47)
-#define GPIO_UART_0_IOMUX_TX                                     (IOMUX_PINCM46)
-#define GPIO_UART_0_IOMUX_RX_FUNC                      IOMUX_PINCM47_PF_UART2_RX
-#define GPIO_UART_0_IOMUX_TX_FUNC                      IOMUX_PINCM46_PF_UART2_TX
-#define UART_0_BAUD_RATE                                                  (9600)
-#define UART_0_IBRD_40_MHZ_9600_BAUD                                       (260)
-#define UART_0_FBRD_40_MHZ_9600_BAUD                                        (27)
+#define CHASSIS_UART_IBRD_4_MHZ_115200_BAUD                                  (2)
+#define CHASSIS_UART_FBRD_4_MHZ_115200_BAUD                                 (11)
 
 
 
@@ -299,7 +283,6 @@ void SYSCFG_DL_OLED_init(void);
 void SYSCFG_DL_TRACKING_UART_init(void);
 void SYSCFG_DL_IMU601_init(void);
 void SYSCFG_DL_CHASSIS_UART_init(void);
-void SYSCFG_DL_UART_0_init(void);
 
 void SYSCFG_DL_SYSTICK_init(void);
 

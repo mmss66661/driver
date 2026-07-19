@@ -10,7 +10,7 @@
 "./path_navigation.o"
 "./stepper_motor.o"
 "./tracking_controller.o"
+"../path_flash.cmd"
 -l"./device_linker.cmd"
--l"../path_flash.cmd"
 -ldevice.cmd.genlibs
 -llibc.a

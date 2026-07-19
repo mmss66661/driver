@@ -4,7 +4,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-#define CHASSIS_FEEDBACK_REGISTERS (4U)
+#define CHASSIS_FEEDBACK_REGISTERS (8U)
 
 typedef struct {
     int16_t leftCommand;

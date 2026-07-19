@@ -1,0 +1,1 @@
+-m"driver.map" -i"C:/TI/mspm0_sdk_2_10_00_04/source" -i"C:/Users/Administrator/workspace_ccstheia/driver" -i"C:/Users/Administrator/workspace_ccstheia/driver/Debug/syscfg" -i"E:/ccs/tools/compiler/ti-cgt-armllvm_4.0.4.LTS/lib" --diag_wrap=off --display_error_number --warn_sections --xml_link_info="driver_linkInfo.xml" --rom_model 

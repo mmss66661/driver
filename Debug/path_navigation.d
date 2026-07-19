@@ -1,6 +1,7 @@
 # FIXED
 
-stepper_motor.o: ../stepper_motor.c ../stepper_motor.h \
+path_navigation.o: ../path_navigation.c ../path_navigation.h \
+ ../chassis_motor.h ../imu601.h ../line_follower.h \
  ti_msp_dl_config.h \
  E:/mspm0_sdk_2_11_00_07/source/ti/devices/msp/msp.h \
  E:/mspm0_sdk_2_11_00_07/source/ti/devices/DeviceFamily.h \
@@ -84,7 +85,10 @@ stepper_motor.o: ../stepper_motor.c ../stepper_motor.h \
  E:/mspm0_sdk_2_11_00_07/source/ti/driverlib/dl_wwdt.h \
  E:/mspm0_sdk_2_11_00_07/source/ti/driverlib/m0p/dl_interrupt.h \
  E:/mspm0_sdk_2_11_00_07/source/ti/driverlib/m0p/dl_systick.h
-../stepper_motor.h:
+../path_navigation.h:
+../chassis_motor.h:
+../imu601.h:
+../line_follower.h:
 ti_msp_dl_config.h:
 E:/mspm0_sdk_2_11_00_07/source/ti/devices/msp/msp.h:
 E:/mspm0_sdk_2_11_00_07/source/ti/devices/DeviceFamily.h:

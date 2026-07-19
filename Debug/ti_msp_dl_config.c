@@ -59,7 +59,6 @@ SYSCONFIG_WEAK void SYSCFG_DL_init(void)
     SYSCFG_DL_TRACKING_UART_init();
     SYSCFG_DL_IMU601_init();
     SYSCFG_DL_CHASSIS_UART_init();
-    SYSCFG_DL_UART_0_init();
     SYSCFG_DL_SYSTICK_init();
     SYSCFG_DL_SYSCTL_CLK_init();
     /* Ensure backup structures have no valid state */
@@ -102,7 +101,6 @@ SYSCONFIG_WEAK void SYSCFG_DL_initPower(void)
     DL_UART_Main_reset(TRACKING_UART_INST);
     DL_UART_Main_reset(IMU601_INST);
     DL_UART_Main_reset(CHASSIS_UART_INST);
-    DL_UART_Main_reset(UART_0_INST);
 
 
     DL_GPIO_enablePower(GPIOA);
@@ -113,7 +111,6 @@ SYSCONFIG_WEAK void SYSCFG_DL_initPower(void)
     DL_UART_Main_enablePower(TRACKING_UART_INST);
     DL_UART_Main_enablePower(IMU601_INST);
     DL_UART_Main_enablePower(CHASSIS_UART_INST);
-    DL_UART_Main_enablePower(UART_0_INST);
 
     delay_cycles(POWER_STARTUP_DELAY);
 }
@@ -150,10 +147,6 @@ SYSCONFIG_WEAK void SYSCFG_DL_GPIO_init(void)
         GPIO_CHASSIS_UART_IOMUX_TX, GPIO_CHASSIS_UART_IOMUX_TX_FUNC);
     DL_GPIO_initPeripheralInputFunction(
         GPIO_CHASSIS_UART_IOMUX_RX, GPIO_CHASSIS_UART_IOMUX_RX_FUNC);
-    DL_GPIO_initPeripheralOutputFunction(
-        GPIO_UART_0_IOMUX_TX, GPIO_UART_0_IOMUX_TX_FUNC);
-    DL_GPIO_initPeripheralInputFunction(
-        GPIO_UART_0_IOMUX_RX, GPIO_UART_0_IOMUX_RX_FUNC);
 
     DL_GPIO_initDigitalOutput(MOTOR_DIR_MOTOR1_DIR_IOMUX);
 
@@ -360,6 +353,7 @@ SYSCONFIG_WEAK void SYSCFG_DL_SYSCTL_init(void)
         while ((DL_SYSCTL_getClockStatus() & SYSCTL_CLKSTATUS_SYSPLLGOOD_MASK) != DL_SYSCTL_CLK_STATUS_SYSPLL_GOOD){}
     }
     DL_SYSCTL_setULPCLKDivider(DL_SYSCTL_ULPCLK_DIV_2);
+    DL_SYSCTL_enableMFCLK();
     DL_SYSCTL_setMCLKSource(SYSOSC, HSCLK, DL_SYSCTL_HSCLK_SOURCE_SYSPLL);
 
 }
@@ -487,8 +481,8 @@ SYSCONFIG_WEAK void SYSCFG_DL_OLED_init(void) {
 
     /* Configure Controller Mode */
     DL_I2C_resetControllerTransfer(OLED_INST);
-    /* Set frequency to 400000 Hz*/
-    DL_I2C_setTimerPeriod(OLED_INST, 9);
+    /* Set frequency to 100000 Hz*/
+    DL_I2C_setTimerPeriod(OLED_INST, 39);
     DL_I2C_setControllerTXFIFOThreshold(OLED_INST, DL_I2C_TX_FIFO_LEVEL_EMPTY);
     DL_I2C_setControllerRXFIFOThreshold(OLED_INST, DL_I2C_RX_FIFO_LEVEL_BYTES_1);
     DL_I2C_enableControllerClockStretching(OLED_INST);
@@ -579,7 +573,7 @@ SYSCONFIG_WEAK void SYSCFG_DL_IMU601_init(void)
     DL_UART_Main_enable(IMU601_INST);
 }
 static const DL_UART_Main_ClockConfig gCHASSIS_UARTClockConfig = {
-    .clockSel    = DL_UART_MAIN_CLOCK_BUSCLK,
+    .clockSel    = DL_UART_MAIN_CLOCK_MFCLK,
     .divideRatio = DL_UART_MAIN_CLOCK_DIVIDE_RATIO_1
 };
 
@@ -600,10 +594,10 @@ SYSCONFIG_WEAK void SYSCFG_DL_CHASSIS_UART_init(void)
     /*
      * Configure baud rate by setting oversampling and baud rate divisors.
      *  Target baud rate: 115200
-     *  Actual baud rate: 115190.78
+     *  Actual baud rate: 115107.91
      */
     DL_UART_Main_setOversampling(CHASSIS_UART_INST, DL_UART_OVERSAMPLING_RATE_16X);
-    DL_UART_Main_setBaudRateDivisor(CHASSIS_UART_INST, CHASSIS_UART_IBRD_40_MHZ_115200_BAUD, CHASSIS_UART_FBRD_40_MHZ_115200_BAUD);
+    DL_UART_Main_setBaudRateDivisor(CHASSIS_UART_INST, CHASSIS_UART_IBRD_4_MHZ_115200_BAUD, CHASSIS_UART_FBRD_4_MHZ_115200_BAUD);
 
 
     /* Configure Interrupts */
@@ -613,40 +607,11 @@ SYSCONFIG_WEAK void SYSCFG_DL_CHASSIS_UART_init(void)
                                  DL_UART_MAIN_INTERRUPT_OVERRUN_ERROR |
                                  DL_UART_MAIN_INTERRUPT_PARITY_ERROR |
                                  DL_UART_MAIN_INTERRUPT_RX);
+    /* Setting the Interrupt Priority */
+    NVIC_SetPriority(CHASSIS_UART_INST_INT_IRQN, 0);
 
 
     DL_UART_Main_enable(CHASSIS_UART_INST);
-}
-static const DL_UART_Main_ClockConfig gUART_0ClockConfig = {
-    .clockSel    = DL_UART_MAIN_CLOCK_BUSCLK,
-    .divideRatio = DL_UART_MAIN_CLOCK_DIVIDE_RATIO_1
-};
-
-static const DL_UART_Main_Config gUART_0Config = {
-    .mode        = DL_UART_MAIN_MODE_NORMAL,
-    .direction   = DL_UART_MAIN_DIRECTION_TX_RX,
-    .flowControl = DL_UART_MAIN_FLOW_CONTROL_NONE,
-    .parity      = DL_UART_MAIN_PARITY_NONE,
-    .wordLength  = DL_UART_MAIN_WORD_LENGTH_8_BITS,
-    .stopBits    = DL_UART_MAIN_STOP_BITS_ONE
-};
-
-SYSCONFIG_WEAK void SYSCFG_DL_UART_0_init(void)
-{
-    DL_UART_Main_setClockConfig(UART_0_INST, (DL_UART_Main_ClockConfig *) &gUART_0ClockConfig);
-
-    DL_UART_Main_init(UART_0_INST, (DL_UART_Main_Config *) &gUART_0Config);
-    /*
-     * Configure baud rate by setting oversampling and baud rate divisors.
-     *  Target baud rate: 9600
-     *  Actual baud rate: 9599.81
-     */
-    DL_UART_Main_setOversampling(UART_0_INST, DL_UART_OVERSAMPLING_RATE_16X);
-    DL_UART_Main_setBaudRateDivisor(UART_0_INST, UART_0_IBRD_40_MHZ_9600_BAUD, UART_0_FBRD_40_MHZ_9600_BAUD);
-
-
-
-    DL_UART_Main_enable(UART_0_INST);
 }
 
 SYSCONFIG_WEAK void SYSCFG_DL_SYSTICK_init(void)

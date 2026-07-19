@@ -145,6 +145,8 @@ static const char *navigationErrorText(PathNavigation_Error error)
             return "FAULT:FULL";
         case PATH_NAV_ERROR_FLASH:
             return "FAULT:FLASH";
+        case PATH_NAV_ERROR_LINE_LOST:
+            return "FAULT:LINE";
         default:
             return "FAULT:NONE";
     }
@@ -152,7 +154,7 @@ static const char *navigationErrorText(PathNavigation_Error error)
 
 static void updateDisplay(uint8_t page)
 {
-    char line[22];
+    char line[32];
     IMU601_Attitude attitude;
     TrackingController_Status tracking;
     ChassisMotor_Status chassis;
@@ -219,6 +221,14 @@ static void updateDisplay(uint8_t page)
         } else {
             OLED_ShowString(0U, 40U, "MOTOR:READY");
         }
+        (void) appendUnsigned(appendText(line, "ACK:"),
+            chassis.acknowledgementCount);
+        OLED_ShowString(0U, 48U, line);
+        char *write = appendUnsigned(appendText(line, "CRC:"),
+            chassis.crcErrorCount);
+        write = appendText(write, " U:");
+        (void) appendUnsigned(write, chassis.uartErrorCount);
+        OLED_ShowString(0U, 56U, line);
     } else {
         OLED_ShowString(0U, 0U, navigationModeText(navigation.mode));
         if (navigation.mode == PATH_NAV_ERROR) {
@@ -237,13 +247,21 @@ static void updateDisplay(uint8_t page)
         (void) appendUnsigned(appendText(line, "DIST:"),
             navigation.distanceTicks);
         OLED_ShowString(0U, 32U, line);
-        formatSigned(line, "HEAD:", navigation.headingCentiDegrees);
+        if (!navigation.lineDetected) {
+            (void) appendUnsigned(appendText(line, "LINE:LOST "),
+                navigation.lineLostMilliseconds);
+        } else {
+            char *write = appendUnsigned(
+                appendText(line,
+                    navigation.intersectionDetected ? "CROSS:" : "LINE:"),
+                navigation.lineActiveCount);
+            write = appendText(write, " E:");
+            (void) appendSigned(write, navigation.lineErrorTenths);
+        }
         OLED_ShowString(0U, 40U, line);
-        formatSigned(line, "TARGET:",
-            navigation.targetHeadingCentiDegrees);
+        formatSigned(line, "HEAD:", navigation.headingCentiDegrees);
         OLED_ShowString(0U, 48U, line);
-        formatSigned(line, "ERROR:",
-            navigation.headingErrorCentiDegrees);
+        formatSigned(line, "TURN:", navigation.fusedTurnCommand);
         OLED_ShowString(0U, 56U, line);
     }
     (void) OLED_Refresh();
@@ -261,6 +279,8 @@ int main(void)
     uint8_t displayPage = 0U;
 
     SYSCFG_DL_init();
+    /* Bring up the diagnostic display before other peripherals initialize. */
+    (void) OLED_Init();
     StepperMotor_init();
     TrackingController_init();
     ChassisMotor_init();
@@ -269,7 +289,6 @@ int main(void)
     Buttons_init();
     IMU601_init();
     PathNavigation_init();
-    (void) OLED_Init();
 
 #if UART_TX_TEST_ENABLE
     /* Immediate message: UART TX testing no longer depends on SysTick. */

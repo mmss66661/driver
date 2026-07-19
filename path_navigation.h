@@ -19,7 +19,8 @@ typedef enum {
     PATH_NAV_ERROR_DRIVE_ACTIVE,
     PATH_NAV_ERROR_PATH_SHORT,
     PATH_NAV_ERROR_PATH_FULL,
-    PATH_NAV_ERROR_FLASH
+    PATH_NAV_ERROR_FLASH,
+    PATH_NAV_ERROR_LINE_LOST
 } PathNavigation_Error;
 
 typedef struct {
@@ -32,6 +33,14 @@ typedef struct {
     int32_t headingCentiDegrees;
     int32_t targetHeadingCentiDegrees;
     int32_t headingErrorCentiDegrees;
+    uint8_t lineActiveCount;
+    int16_t lineErrorTenths;
+    int16_t lineTurnCommand;
+    int16_t navigationTurnCommand;
+    int16_t fusedTurnCommand;
+    uint32_t lineLostMilliseconds;
+    bool lineDetected;
+    bool intersectionDetected;
 } PathNavigation_Status;
 
 void PathNavigation_init(void);

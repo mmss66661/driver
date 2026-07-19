@@ -5,6 +5,9 @@
 SHELL = cmd.exe
 
 # Add inputs and outputs from these tool invocations to the build variables 
+CMD_SRCS += \
+../path_flash.cmd 
+
 SYSCFG_SRCS += \
 ../empty.syscfg 
 
@@ -13,7 +16,7 @@ C_SRCS += \
 ../chassis_motor.c \
 ../empty.c \
 ./ti_msp_dl_config.c \
-C:/TI/mspm0_sdk_2_10_00_04/source/ti/devices/msp/m0p/startup_system_files/ticlang/startup_mspm0g350x_ticlang.c \
+E:/mspm0_sdk_2_11_00_07/source/ti/devices/msp/m0p/startup_system_files/ticlang/startup_mspm0g350x_ticlang.c \
 ../imu601.c \
 ../line_follower.c \
 ../line_sensor.c \
@@ -109,7 +112,7 @@ C_SRCS__QUOTED += \
 "../chassis_motor.c" \
 "../empty.c" \
 "./ti_msp_dl_config.c" \
-"C:/TI/mspm0_sdk_2_10_00_04/source/ti/devices/msp/m0p/startup_system_files/ticlang/startup_mspm0g350x_ticlang.c" \
+"E:/mspm0_sdk_2_11_00_07/source/ti/devices/msp/m0p/startup_system_files/ticlang/startup_mspm0g350x_ticlang.c" \
 "../imu601.c" \
 "../line_follower.c" \
 "../line_sensor.c" \

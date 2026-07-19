@@ -7,7 +7,7 @@ SHELL = cmd.exe
 CG_TOOL_ROOT := E:/ccs/tools/compiler/ti-cgt-armllvm_4.0.4.LTS
 
 GEN_OPTS__FLAG := @"./device.opt" 
-GEN_CMDS__FLAG := -Wl,-l"./device_linker.cmd" -Wl,-l"../path_flash.cmd" 
+GEN_CMDS__FLAG := -Wl,-l"./device_linker.cmd" 
 
 ORDERED_OBJS += \
 "./buttons.o" \
@@ -22,6 +22,7 @@ ORDERED_OBJS += \
 "./path_navigation.o" \
 "./stepper_motor.o" \
 "./tracking_controller.o" \
+"../path_flash.cmd" \
 $(GEN_CMDS__FLAG) \
 -Wl,-ldevice.cmd.genlibs \
 -Wl,-llibc.a \
@@ -132,13 +133,13 @@ EXE_OUTPUTS__QUOTED += \
 
 
 # All Target
-all: $(OBJS) $(GEN_CMDS)
+all: $(OBJS) $(CMD_SRCS) $(GEN_CMDS)
 	@$(MAKE) --no-print-directory -Onone "driver.out"
 
 # Tool invocations
-driver.out: $(OBJS) $(GEN_CMDS)
+driver.out: $(OBJS) $(CMD_SRCS) $(GEN_CMDS)
 	@echo 'Arm Linker - building target: "$@"'
-	"E:/ccs/tools/compiler/ti-cgt-armllvm_4.0.4.LTS/bin/tiarmclang.exe" @"device.opt"  -march=thumbv6m -mcpu=cortex-m0plus -mfloat-abi=soft -mlittle-endian -mthumb -O2 -gdwarf-3 -Wall -Wl,-m"driver.map" -Wl,-i"C:/TI/mspm0_sdk_2_10_00_04/source" -Wl,-i"C:/Users/Administrator/workspace_ccstheia/driver" -Wl,-i"C:/Users/Administrator/workspace_ccstheia/driver/Debug/syscfg" -Wl,-i"E:/ccs/tools/compiler/ti-cgt-armllvm_4.0.4.LTS/lib" -Wl,--diag_wrap=off -Wl,--display_error_number -Wl,--warn_sections -Wl,--xml_link_info="driver_linkInfo.xml" -Wl,--rom_model -o "driver.out" $(ORDERED_OBJS)
+	"E:/ccs/tools/compiler/ti-cgt-armllvm_4.0.4.LTS/bin/tiarmclang.exe" @"device.opt"  -march=thumbv6m -mcpu=cortex-m0plus -mfloat-abi=soft -mlittle-endian -mthumb -O2 -gdwarf-3 -Wall -Wl,-m"driver.map" -Wl,-i"E:/mspm0_sdk_2_11_00_07/source" -Wl,-i"C:/Users/Administrator/workspace_ccstheia/driver" -Wl,-i"C:/Users/Administrator/workspace_ccstheia/driver/Debug/syscfg" -Wl,-i"E:/ccs/tools/compiler/ti-cgt-armllvm_4.0.4.LTS/lib" -Wl,--diag_wrap=off -Wl,--display_error_number -Wl,--warn_sections -Wl,--xml_link_info="driver_linkInfo.xml" -Wl,--rom_model -o "driver.out" $(ORDERED_OBJS)
 	@echo 'Finished building target: "$@"'
 	@echo ' '
 
