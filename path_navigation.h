@@ -30,6 +30,9 @@ typedef struct {
     uint16_t pointCount;
     uint16_t currentPoint;
     uint32_t distanceTicks;
+    uint32_t segmentDistanceTicks;
+    uint32_t segmentTargetTicks;
+    uint32_t cornerAdvanceTicks;
     int32_t headingCentiDegrees;
     int32_t targetHeadingCentiDegrees;
     int32_t headingErrorCentiDegrees;

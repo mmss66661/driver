@@ -241,11 +241,15 @@ static void updateDisplay(uint8_t page)
         (void) appendUnsigned(appendText(line, "POINTS:"),
             navigation.pointCount);
         OLED_ShowString(0U, 16U, line);
-        (void) appendUnsigned(appendText(line, "INDEX:"),
-            navigation.currentPoint);
+        char *write = appendUnsigned(appendText(line, "EDGE:"),
+            (uint32_t) navigation.currentPoint + 1U);
+        write = appendText(write, " A:");
+        (void) appendUnsigned(write, navigation.cornerAdvanceTicks);
         OLED_ShowString(0U, 24U, line);
-        (void) appendUnsigned(appendText(line, "DIST:"),
-            navigation.distanceTicks);
+        write = appendUnsigned(appendText(line, "D:"),
+            navigation.segmentDistanceTicks);
+        write = appendText(write, "/");
+        (void) appendUnsigned(write, navigation.segmentTargetTicks);
         OLED_ShowString(0U, 32U, line);
         if (!navigation.lineDetected) {
             (void) appendUnsigned(appendText(line, "LINE:LOST "),
