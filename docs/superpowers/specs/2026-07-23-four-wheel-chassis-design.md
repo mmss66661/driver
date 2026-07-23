@@ -57,13 +57,13 @@ leftEncoderCount  = average(motor0, motor3)
 rightEncoderCount = average(motor1, motor2)
 ```
 
-The average must avoid overflow and must preserve negative values. These logical counts keep the existing navigation code compatible while using both motors on each side.
+The average must avoid arithmetic overflow, preserve negative values, and remain continuous when one 16-bit encoder has just wrapped from `32767` to `-32768` before the other. It will use the signed modular delta between the pair rather than a plain integer sum. These logical counts keep the existing navigation code compatible while using both motors on each side.
 
 ## Commands And Status
 
 `ChassisMotor_setWheelSpeeds(left, right, nowMs)` remains the primary logical interface. The status continues to expose `leftCommand` and `rightCommand` as forward-positive logical side commands, not raw motor-register values.
 
-Four physical motor command and encoder fields will be added to `ChassisMotor_Status` for OLED/debugger inspection. Existing callers that only use logical left/right fields remain source-compatible.
+Four physical motor command and encoder fields will be added to `ChassisMotor_Status` for debugger and diagnostic inspection. Existing callers that only use logical left/right fields remain source-compatible.
 
 ## Safety And Error Handling
 
@@ -90,4 +90,3 @@ The approved design uses option 1.
 4. With wheels raised, command a small positive forward speed and confirm all four wheels move the vehicle-forward direction.
 5. Manually roll the vehicle forward and confirm all four physical encoder fields increase and both logical side averages increase.
 6. Stop refreshing commands and confirm the watchdog sends zero to all four motors.
-
