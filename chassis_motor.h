@@ -4,12 +4,16 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+#include "chassis_motor_mapping.h"
+
 #define CHASSIS_FEEDBACK_REGISTERS (8U)
 
 typedef struct {
     int16_t leftCommand;
     int16_t rightCommand;
+    int16_t motorCommand[CHASSIS_PHYSICAL_MOTOR_COUNT];
     int16_t feedback[CHASSIS_FEEDBACK_REGISTERS];
+    int16_t motorEncoderCount[CHASSIS_PHYSICAL_MOTOR_COUNT];
     int32_t leftEncoderCount;
     int32_t rightEncoderCount;
     uint32_t feedbackFrameCount;

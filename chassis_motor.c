@@ -10,12 +10,13 @@
 #define MODBUS_READ_HOLDING                (0x03U)
 #define CHASSIS_TX_PERIOD_MS               (20U)
 #define CHASSIS_COMMAND_TIMEOUT_MS         (250U)
-#define CHASSIS_LEFT_MOTOR_INVERTED        (0)
-#define CHASSIS_RIGHT_MOTOR_INVERTED       (1)
-#define CHASSIS_LEFT_ENCODER_REVERSED      (1U)
-#define CHASSIS_RIGHT_ENCODER_REVERSED     (1U)
+#define CHASSIS_ENCODER_POLARITY_BASE      (0x0009U)
 #define CHASSIS_ENCODER_BYTE_COUNT         (16U)
 #define CHASSIS_RX_BUFFER_SIZE             (21U)
+
+static const uint16_t gEncoderPolarity[CHASSIS_PHYSICAL_MOTOR_COUNT] = {
+    0U, 1U, 1U, 1U
+};
 
 static volatile ChassisMotor_Status gStatus;
 static volatile uint8_t gRxBuffer[CHASSIS_RX_BUFFER_SIZE];
@@ -72,19 +73,14 @@ static void writeSingleRegister(uint16_t address, uint16_t value)
 static void sendSpeeds(int16_t left, int16_t right)
 {
     uint8_t frame[17];
-    uint16_t values[4];
+    uint16_t values[CHASSIS_PHYSICAL_MOTOR_COUNT];
+    ChassisMotor_PhysicalCommand command;
     uint8_t i;
 
-#if CHASSIS_LEFT_MOTOR_INVERTED
-    left = (left == INT16_MIN) ? INT16_MAX : (int16_t) -left;
-#endif
-#if CHASSIS_RIGHT_MOTOR_INVERTED
-    right = (right == INT16_MIN) ? INT16_MAX : (int16_t) -right;
-#endif
-    values[0] = (uint16_t) left;
-    values[1] = (uint16_t) right;
-    values[2] = 0U;
-    values[3] = 0U;
+    ChassisMotor_mapSideSpeeds(left, right, &command);
+    for (i = 0U; i < CHASSIS_PHYSICAL_MOTOR_COUNT; i++) {
+        values[i] = (uint16_t) command.motor[i];
+    }
 
     frame[0] = MODBUS_ADDRESS;
     frame[1] = MODBUS_WRITE_MULTIPLE;
@@ -93,11 +89,24 @@ static void sendSpeeds(int16_t left, int16_t right)
     frame[4] = 0x00U;
     frame[5] = 0x04U;
     frame[6] = 0x08U;
-    for (i = 0U; i < 4U; i++) {
+    for (i = 0U; i < CHASSIS_PHYSICAL_MOTOR_COUNT; i++) {
         frame[7U + i * 2U] = (uint8_t) (values[i] >> 8U);
         frame[8U + i * 2U] = (uint8_t) values[i];
     }
     sendFrame(frame, 15U);
+}
+
+static void updateCommandStatus(int16_t left, int16_t right)
+{
+    ChassisMotor_PhysicalCommand command;
+    uint8_t i;
+
+    ChassisMotor_mapSideSpeeds(left, right, &command);
+    gStatus.leftCommand = left;
+    gStatus.rightCommand = right;
+    for (i = 0U; i < CHASSIS_PHYSICAL_MOTOR_COUNT; i++) {
+        gStatus.motorCommand[i] = command.motor[i];
+    }
 }
 
 static void delayMs(uint32_t milliseconds)
@@ -168,8 +177,19 @@ static void acceptFrame(void)
                 (((uint16_t) gRxBuffer[3U + i * 2U] << 8U) |
                  gRxBuffer[4U + i * 2U]);
         }
-        gStatus.leftEncoderCount = gStatus.feedback[0];
-        gStatus.rightEncoderCount = gStatus.feedback[1];
+        if (registerCount >= CHASSIS_PHYSICAL_MOTOR_COUNT) {
+            for (i = 0U; i < CHASSIS_PHYSICAL_MOTOR_COUNT; i++) {
+                gStatus.motorEncoderCount[i] = gStatus.feedback[i];
+            }
+            gStatus.leftEncoderCount =
+                ChassisMotor_averageWrappedEncoder(
+                    gStatus.motorEncoderCount[0],
+                    gStatus.motorEncoderCount[3]);
+            gStatus.rightEncoderCount =
+                ChassisMotor_averageWrappedEncoder(
+                    gStatus.motorEncoderCount[1],
+                    gStatus.motorEncoderCount[2]);
+        }
         gStatus.feedbackFrameCount++;
     } else {
         gStatus.acknowledgementCount++;
@@ -224,10 +244,12 @@ void ChassisMotor_init(void)
     gTransmitImmediately = false;
     gClosedLoopEnabled = false;
     resetParser();
-    gStatus.leftCommand = 0;
-    gStatus.rightCommand = 0;
+    updateCommandStatus(0, 0);
     for (i = 0U; i < CHASSIS_FEEDBACK_REGISTERS; i++) {
         gStatus.feedback[i] = 0;
+    }
+    for (i = 0U; i < CHASSIS_PHYSICAL_MOTOR_COUNT; i++) {
+        gStatus.motorEncoderCount[i] = 0;
     }
     gStatus.feedbackFrameCount = 0U;
     gStatus.leftEncoderCount = 0;
@@ -240,9 +262,14 @@ void ChassisMotor_init(void)
     NVIC_ClearPendingIRQ(CHASSIS_UART_INST_INT_IRQN);
     NVIC_EnableIRQ(CHASSIS_UART_INST_INT_IRQN);
 
-    writeSingleRegister(0x0009U, CHASSIS_LEFT_ENCODER_REVERSED);
-    delayMs(50U);
-    writeSingleRegister(0x000AU, CHASSIS_RIGHT_ENCODER_REVERSED);
+    for (i = 0U; i < CHASSIS_PHYSICAL_MOTOR_COUNT; i++) {
+        writeSingleRegister(
+            (uint16_t) (CHASSIS_ENCODER_POLARITY_BASE + i),
+            gEncoderPolarity[i]);
+        if ((i + 1U) < CHASSIS_PHYSICAL_MOTOR_COUNT) {
+            delayMs(50U);
+        }
+    }
 }
 
 void ChassisMotor_process(uint32_t nowMs)
@@ -254,8 +281,7 @@ void ChassisMotor_process(uint32_t nowMs)
         ((nowMs - gLastCommandTime) > CHASSIS_COMMAND_TIMEOUT_MS)) {
         gTargetLeft = 0;
         gTargetRight = 0;
-        gStatus.leftCommand = 0;
-        gStatus.rightCommand = 0;
+        updateCommandStatus(0, 0);
         gStatus.commandTimedOut = true;
         gCommandValid = false;
         gTransmitImmediately = true;
@@ -281,8 +307,7 @@ void ChassisMotor_setWheelSpeeds(
     gLastCommandTime = nowMs;
     gCommandValid = true;
     gTransmitImmediately = gClosedLoopEnabled;
-    gStatus.leftCommand = leftSpeed;
-    gStatus.rightCommand = rightSpeed;
+    updateCommandStatus(leftSpeed, rightSpeed);
     gStatus.commandTimedOut = false;
 }
 
