@@ -1,6 +1,7 @@
 # FIXED
 
 chassis_motor.o: ../chassis_motor.c ../chassis_motor.h \
+ ../chassis_motor_mapping.h \
  ti_msp_dl_config.h \
  E:/mspm0_sdk_2_11_00_07/source/ti/devices/msp/msp.h \
  E:/mspm0_sdk_2_11_00_07/source/ti/devices/DeviceFamily.h \
@@ -85,6 +86,7 @@ chassis_motor.o: ../chassis_motor.c ../chassis_motor.h \
  E:/mspm0_sdk_2_11_00_07/source/ti/driverlib/m0p/dl_interrupt.h \
  E:/mspm0_sdk_2_11_00_07/source/ti/driverlib/m0p/dl_systick.h
 ../chassis_motor.h:
+../chassis_motor_mapping.h:
 ti_msp_dl_config.h:
 E:/mspm0_sdk_2_11_00_07/source/ti/devices/msp/msp.h:
 E:/mspm0_sdk_2_11_00_07/source/ti/devices/DeviceFamily.h:

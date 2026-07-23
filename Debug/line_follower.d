@@ -1,7 +1,8 @@
 # FIXED
 
 line_follower.o: ../line_follower.c ../line_follower.h ../chassis_motor.h \
- ../line_sensor.h
+ ../chassis_motor_mapping.h ../line_sensor.h
 ../line_follower.h:
 ../chassis_motor.h:
+../chassis_motor_mapping.h:
 ../line_sensor.h:

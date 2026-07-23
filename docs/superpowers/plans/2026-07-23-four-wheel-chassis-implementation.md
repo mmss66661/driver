@@ -22,7 +22,7 @@
 ### Task 1: Pure Four-Motor Mapping
 
 **Files:**
-- Create: `tests/chassis_motor_mapping_test.c`
+- Create: `tests/chassis_motor_mapping_test.c.txt`
 - Create: `chassis_motor_mapping.h`
 
 **Interfaces:**
@@ -71,7 +71,7 @@ int main(void)
 Run:
 
 ```powershell
-gcc -std=c11 -Wall -Wextra -Werror -I. tests/chassis_motor_mapping_test.c -o tests/chassis_motor_mapping_test.exe
+gcc -x c -std=c11 -Wall -Wextra -Werror -I. tests/chassis_motor_mapping_test.c.txt -o "$env:TEMP/chassis_motor_mapping_test.exe"
 ```
 
 Expected: compilation fails because `chassis_motor_mapping.h` does not exist.
@@ -128,7 +128,7 @@ static inline int16_t ChassisMotor_averageWrappedEncoder(
 Run the Step 2 command, then:
 
 ```powershell
-.\tests\chassis_motor_mapping_test.exe
+& "$env:TEMP/chassis_motor_mapping_test.exe"
 ```
 
 Expected: `chassis motor mapping tests passed`.

@@ -84,9 +84,9 @@ empty.o: ../empty.c \
  E:/mspm0_sdk_2_11_00_07/source/ti/driverlib/dl_wwdt.h \
  E:/mspm0_sdk_2_11_00_07/source/ti/driverlib/m0p/dl_interrupt.h \
  E:/mspm0_sdk_2_11_00_07/source/ti/driverlib/m0p/dl_systick.h \
- ../buttons.h ../chassis_motor.h ../imu601.h ../line_follower.h \
- ../line_sensor.h ../oled.h ../path_navigation.h ../stepper_motor.h \
- ../tracking_controller.h
+ ../buttons.h ../chassis_motor.h ../chassis_motor_mapping.h ../imu601.h \
+ ../line_follower.h ../line_sensor.h ../oled.h ../path_navigation.h \
+ ../stepper_motor.h ../tracking_controller.h
 ti_msp_dl_config.h:
 E:/mspm0_sdk_2_11_00_07/source/ti/devices/msp/msp.h:
 E:/mspm0_sdk_2_11_00_07/source/ti/devices/DeviceFamily.h:
@@ -172,6 +172,7 @@ E:/mspm0_sdk_2_11_00_07/source/ti/driverlib/m0p/dl_interrupt.h:
 E:/mspm0_sdk_2_11_00_07/source/ti/driverlib/m0p/dl_systick.h:
 ../buttons.h:
 ../chassis_motor.h:
+../chassis_motor_mapping.h:
 ../imu601.h:
 ../line_follower.h:
 ../line_sensor.h:
