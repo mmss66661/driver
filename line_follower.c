@@ -9,8 +9,8 @@
 #define LINE_FOLLOW_BASE_SPEED             (10)
 #define LINE_FOLLOW_MIN_SPEED              (6)
 #define LINE_FOLLOW_LOST_SPEED             (3)
-#define LINE_FOLLOW_LOST_TURN              (5)
-#define LINE_FOLLOW_MAX_TURN               (10)
+#define LINE_FOLLOW_LOST_TURN              (20)//5
+#define LINE_FOLLOW_MAX_TURN               (20)//10
 #define LINE_FOLLOW_INTERSECTION_COUNT     (6U)
 #define LINE_FOLLOW_LOST_TIMEOUT_MS        (700U)
 
@@ -19,7 +19,7 @@
 #define LINE_FOLLOW_EDGE_TURN_ERROR         (110)
 
 /* Integer PID coefficients use a common divisor of 100. */
-#define LINE_PID_KP                         (3)//3
+#define LINE_PID_KP                         (15)//3
 #define LINE_PID_KI                         (0)
 #define LINE_PID_KD                         (20)//20
 #define LINE_PID_DIVISOR                    (100)
